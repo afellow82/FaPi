@@ -901,17 +901,15 @@
     boardEl.appendChild(frag);
   }
 
-  function pointsPerPixel() {
-    if (activeSlotCount === 3) return 3;
-    if (activeSlotCount === 4) return 2;
-    if (activeSlotCount === 5) return 1;
-    return 0;
-  }
+function pointsPerPixel() {
+    // 3 Plätze = +3, 6 Plätze = 0, 7 Plätze = -1 usw.
+    return 6 - activeSlotCount;
+}
 
   function renderPointsRate() {
     const value=pointsPerPixel();
     pointsRateValueEl.textContent=String(value);
-    pointsRateUnitEl.textContent=value===1 ? "Punkt je Pixel" : "Punkte je Pixel";
+    pointsRateUnitEl.textContent=Math.abs(value)===1 ? "Punkt je Pixel" : "Punkte je Pixel";
     pointsRateEl.classList.toggle("no-points", value===0);
     pointsRateEl.setAttribute("aria-label", `${value} ${value===1 ? "Punkt" : "Punkte"} pro gesammeltem Pixel bei ${activeSlotCount} Ablagepositionen`);
   }
@@ -1321,7 +1319,7 @@
     for (const mover of arrived) {
       mover.el.remove();
       moveCount++;
-      totalScore += pointsPerPixel();
+      totalScore = Math.max(0, totalScore + pointsPerPixel());
       if (slotLastMover[mover.slotIndex]===mover.id) {
         slotLaunchReady[mover.slotIndex]=true;
       }
