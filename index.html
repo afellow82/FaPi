@@ -305,7 +305,7 @@
       <button class="action secondary" id="changeImage">Bild wechseln</button>
       <button class="action" id="restart">Neues Spiel</button>
       <button class="action secondary" id="helpBtn" type="button">Hilfe</button>
-      <div class="side-version">Version 1.01<br>(13.11.2026)</div>
+      <div class="side-version">Version 1.02<br>(13.11.2026)</div>
     </div>
 <div class="info-panel" id="infoPanel" hidden>
     <div class="rate-row">
@@ -368,7 +368,7 @@
         <li>Sind alle Plätze belegt, startet die nächste Runde mit einem Platz mehr.</li>
       </ul>
       <h3>Ziel</h3>
-      <p>Räume das Bild so schnell und mit so vielen Punkten wie möglich ab, um in die Top 3 zu kommen (bei gleichen Punkten gewinnt die kürzere Zeit). Fällt der Punktestand wieder auf 0, ist das Spiel verloren: Game Over.</p>
+      <p>Räume das Bild so schnell und mit so vielen Punkten wie möglich ab, um in die Top 10 zu kommen (bei gleichen Punkten gewinnt die kürzere Zeit). Fällt der Punktestand wieder auf 0, ist das Spiel verloren: Game Over.</p>
       <h3>Glück und Zufall</h3>
       <p>FaPi ist ein Glücksspiel: Die Farbblöcke werden bei jedem Spiel zufällig auf die drei Vorratsreihen verteilt und gemischt. Diese Anordnung hat sehr große Auswirkungen auf die erzielbaren Punkte.</p>
       <h3>Highscores</h3>
@@ -382,7 +382,7 @@
       <strong id="finalScoreValue">0 Punkte</strong>
       <p class="final-score-detail" id="finalScoreDetail"></p>
       <section class="highscore-entry" id="highscoreEntry" hidden aria-live="polite">
-        <h3 id="highscoreEntryTitle">🏆 In die Top 3 eintragen</h3>
+        <h3 id="highscoreEntryTitle">🏆 In die Top 10 eintragen</h3>
         <p id="highscoreEntryHint">Das Bild ist vollständig abgeräumt. Gib einen Namen für deinen Eintrag ein.</p>
         <form id="highscoreEntryForm">
           <label for="highscoreName">Dein Name</label>
@@ -394,8 +394,8 @@
         <p class="highscore-entry-status" id="highscoreEntryStatus" role="status"></p>
       </section>
       <div class="final-actions">
-        <button class="action" id="finalRestart" type="button">Neues Spiel</button>
-        <button class="action secondary" id="finalChange" type="button">Bild wechseln</button>
+        <button class="action" id="finalRestart" type="button">(N)eues Spiel</button>
+        <button class="action secondary" id="finalChange" type="button">(B)ild wechseln</button>
       </div>
      </div>
     </div>
@@ -1094,7 +1094,7 @@
     // Blockflöte: klein, vom Mund schräg nach unten, gelb mit schwarzer Kontur
     line(27,17,31,29,4,"black");
     line(28,18,32,30,2,"yellow");
-    brect(30,29,35,33,"black"); brect(31,30,34,32,"red");             // Schallbecher
+    brect(31,29,33,31,"black"); brect(32,30,32,30,"yellow");          // schlankes Flötenende
     // Hände
     brect(29,21,31,22,"pink");
     brect(29,25,31,26,"pink");
@@ -1367,12 +1367,12 @@ function pointsPerPixel() {
       `<span title="Noch ${count} Pixel im Bild"><span class="legend-name"><i class="swatch" style="background:${color.hex}"></i>${color.name}</span><strong class="pixel-count" data-color-count="${color.id}">${count}</strong></span>`
     ).join("") + `</div></div>` + progressHtml;
 
-    // Separate Top 3 je Motiv, ausschließlich im Arbeitsspeicher dieser Seite.
+    // Separate Top 10 je Motiv, ausschließlich im Arbeitsspeicher dieser Seite.
     const section=document.createElement("section");
     section.className="session-highscores";
-    section.setAttribute("aria-label", `Temporäre Top 3 für ${imageDisplayNames[currentImage] || "dieses Bild"}`);
+    section.setAttribute("aria-label", `Temporäre Top 10 für ${imageDisplayNames[currentImage] || "dieses Bild"}`);
     const heading=document.createElement("h3");
-    heading.textContent=`🏆 Top 3 · ${imageDisplayNames[currentImage] || "Bild"}`;
+    heading.textContent=`🏆 Top 10 · ${imageDisplayNames[currentImage] || "Bild"}`;
     const note=document.createElement("p");
     note.className="session-note";
     note.textContent="Nur für diese Sitzung · nach Neuladen gelöscht";
@@ -1411,9 +1411,9 @@ function pointsPerPixel() {
     renderLegend();
   }
 
-  function qualifiesForTopThree(score) {
+  function qualifiesForTopTen(score) {
     const entries=sessionHighscores[currentImage] || [];
-    if (entries.length < 3) return true;
+    if (entries.length < 10) return true;
     const last = entries[entries.length-1];
     return score > last.score || (score === last.score && elapsedMs() < last.timeMs);
   }
@@ -1430,17 +1430,17 @@ function pointsPerPixel() {
     levelWasCleared = label === "Level abgeschlossen!";
     highscoreEntrySaved = false;
     highscoreEntryEl.hidden = !levelWasCleared;
-    highscoreEntryFormEl.hidden = !levelWasCleared || !qualifiesForTopThree(totalScore);
+    highscoreEntryFormEl.hidden = !levelWasCleared || !qualifiesForTopTen(totalScore);
     highscoreNameEl.value="";
     if (levelWasCleared) {
-      // Reicht die Punktzahl nicht für die Top 3, entfallen Überschrift und Eintragen-Hinweis.
+      // Reicht die Punktzahl nicht für die Top 10, entfallen Überschrift und Eintragen-Hinweis.
       const noEntry = highscoreEntryFormEl.hidden;
       document.getElementById("highscoreEntryTitle").hidden = noEntry;
       highscoreEntryHintEl.hidden = noEntry;
-      highscoreEntryHintEl.textContent = `Geschafft! Trage einen Namen ein, um ${totalScore.toLocaleString("de-DE")} Punkte in die Top 3 für ${imageDisplayNames[currentImage]} aufzunehmen.`;
+      highscoreEntryHintEl.textContent = `Geschafft! Trage einen Namen ein, um ${totalScore.toLocaleString("de-DE")} Punkte in die Top 10 für ${imageDisplayNames[currentImage]} aufzunehmen.`;
       highscoreEntryStatusEl.textContent = highscoreEntryFormEl.hidden
-        ? "Deine Punktzahl reicht diesmal nicht für die Top 3."
-        : "Du hast die Top 3 erreicht – gib deinen Namen ein.";
+        ? "Deine Punktzahl reicht diesmal nicht für die Top 10."
+        : "Du hast die Top 10 erreicht – gib deinen Namen ein.";
       if (!highscoreEntryFormEl.hidden) {
         setTimeout(() => highscoreNameEl.focus(), 0);
       }
@@ -1456,16 +1456,16 @@ function pointsPerPixel() {
     const name=highscoreNameEl.value.trim().replace(/\s+/g," ").slice(0,20) || "<ohne Name>";
 
     const entries=sessionHighscores[currentImage];
-    if (!qualifiesForTopThree(totalScore)) {
+    if (!qualifiesForTopTen(totalScore)) {
       highscoreEntryFormEl.hidden=true;
-      highscoreEntryStatusEl.textContent="Deine Punktzahl reicht leider nicht mehr für die Top 3.";
+      highscoreEntryStatusEl.textContent="Deine Punktzahl reicht leider nicht mehr für die Top 10.";
       return;
     }
     const entry={name, score:totalScore, timeMs:elapsedMs(), timestamp:Date.now(), isLatest:true};
     entries.forEach(existing=>existing.isLatest=false);
     entries.push(entry);
     entries.sort((a,b)=>b.score-a.score || a.timeMs-b.timeMs || a.timestamp-b.timestamp);
-    entries.splice(3);
+    entries.splice(10);
     const rank=entries.indexOf(entry)+1;
     highscoreEntrySaved=true;
     highscoreEntryFormEl.hidden=true;
@@ -2039,6 +2039,12 @@ function pointsPerPixel() {
     renderSlots();
     renderLegend();
     statusEl.textContent=`Runde ${roundNumber}: Ein weiterer Ablageplatz ist freigeschaltet. Dein bisheriger Spielstand bleibt erhalten.`;
+    // Bei 0 Punkten und negativer Wertung pro Pixel (-1 oder schlechter) ist das Spiel sofort verloren.
+    if (totalScore === 0 && pointsPerPixel() < 0) {
+      gameOver();
+      statusEl.textContent=`Game Over – du hast 0 Punkte und die Wertung fällt auf ${pointsPerPixel()} pro Pixel.`;
+      return;
+    }
     pump(runToken);
   }
 
@@ -2076,6 +2082,16 @@ function pointsPerPixel() {
   document.getElementById("helpClose").addEventListener("click",()=>setHelp(false));
   helpOverlay.addEventListener("click",e=>{ if (e.target===helpOverlay) setHelp(false); });
   document.addEventListener("keydown",e=>{ if (e.key==="Escape" && !helpOverlay.hidden) setHelp(false); });
+  document.addEventListener("keydown", event => {
+    const key = event.key.toLowerCase();
+    if ((key !== "n" && key !== "b") || event.repeat || event.ctrlKey || event.metaKey || event.altKey) return;
+    const target = event.target;
+    const tagName = target && target.tagName ? target.tagName.toUpperCase() : "";
+    if (target?.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(tagName)) return;
+    if (finalScoreEl.hidden || !imageChooser.hidden || !helpOverlay.hidden) return;
+    event.preventDefault();
+    if (key === "n") newGame(); else showImageChooser();
+  });
   document.getElementById("finalRestart").addEventListener("click",newGame);
   document.getElementById("finalChange").addEventListener("click",showImageChooser);
   document.getElementById("changeImage").addEventListener("click",showImageChooser);
