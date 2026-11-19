@@ -330,6 +330,11 @@
         <span class="image-choice-title">🔮 Mandala</span>
         <small>Ein symmetrisches Mandala aus Ringen mit bunten Blütenblättern.</small>
       </button>
+      <button class="image-choice" id="chooseNeubrandenburg" type="button">
+        <canvas id="neubrandenburgPreview" width="150" height="150" aria-label="Vorschau Stargarder Tor in Neubrandenburg"></canvas>
+        <span class="image-choice-title">🏰 Stargarder Tor</span>
+        <small>Das gotische Backsteintor in Neubrandenburg mit Radfahrern.</small>
+      </button>
     </div>
     <div class="chooser-admin">
       <button class="action secondary" id="adminBtnChooser" type="button">🔐 Administration</button>
@@ -345,7 +350,7 @@
       <button class="action" id="restart">Neues Spiel</button>
       <button class="action secondary" id="pauseBtn" type="button" aria-pressed="false">(P)ause</button>
       <button class="action secondary" id="helpBtn" type="button">Hilfe</button>
-      <div class="side-version">Version 1.07<br>(19.11.2026)</div>
+      <div class="side-version">Version 1.08<br>(19.11.2026)</div>
     </div>
 <div class="info-panel" id="infoPanel" hidden>
     <div class="rate-row">
@@ -473,7 +478,7 @@
         </div>
         <div class="admin-group">
           <h3>Alle Highscores löschen</h3>
-          <p>Leert sämtliche 13 Bestenlisten. Vor dem Löschen erstellt der Server automatisch eine Sicherungskopie.</p>
+          <p>Leert sämtliche 14 Bestenlisten. Vor dem Löschen erstellt der Server automatisch eine Sicherungskopie.</p>
           <button class="action danger" id="adminDeleteAll" type="button">Alle Highscores löschen</button>
         </div>
         <p class="admin-footnote">Jeder Löschvorgang wird serverseitig geprüft und vorab gesichert.</p>
@@ -568,10 +573,10 @@
   let timerEnd = null;     // Zeitpunkt, an dem das Spiel endet
   setInterval(() => updateTimerDisplay(), 100);
   // Lokaler Cache der dauerhaft auf dem Server gespeicherten Top-10-Listen.
-  const sessionHighscores = {rainbow:[], christmas:[], flowers:[], hearts:[], abstract:[], vfb:[], waterpolo:[], coast:[], duesseldorf:[], recorder:[], toronto:[], parrot:[], mandala:[]};
+  const sessionHighscores = {rainbow:[], christmas:[], flowers:[], hearts:[], abstract:[], vfb:[], waterpolo:[], coast:[], duesseldorf:[], recorder:[], toronto:[], parrot:[], mandala:[], neubrandenburg:[]};
   let highscoresLoaded = false;
   let highscoreLoadPromise = null;
-  const imageDisplayNames = {rainbow:"Regenbogen", christmas:"Weihnachtsbaum", flowers:"Blumenwiese", hearts:"Herzen", abstract:"Abstrakte Quadrate", vfb:"VfB Stuttgart", waterpolo:"Wasserball", coast:"Küste mit Leuchtturm", duesseldorf:"Skyline Düsseldorf", recorder:"Blockflöte", toronto:"CN Tower bei Nacht", parrot:"Papagei", mandala:"Mandala"};
+  const imageDisplayNames = {rainbow:"Regenbogen", christmas:"Weihnachtsbaum", flowers:"Blumenwiese", hearts:"Herzen", abstract:"Abstrakte Quadrate", vfb:"VfB Stuttgart", waterpolo:"Wasserball", coast:"Küste mit Leuchtturm", duesseldorf:"Skyline Düsseldorf", recorder:"Blockflöte", toronto:"CN Tower bei Nacht", parrot:"Papagei", mandala:"Mandala", neubrandenburg:"Stargarder Tor"};
   let zeroOrder = [];      // Farben in der Reihenfolge, in der sie auf 0 gefallen sind (bleiben am Listenende)
   let levelWasCleared = false;
   let highscoreEntrySaved = false;
@@ -1397,7 +1402,129 @@
     }
     return a;
   }
+  function makeNeubrandenburg() {
+    // 50×50 Pixelmotiv: Stargarder Tor in Neubrandenburg – Backsteingotik mit vier Ziergiebeln,
+    // Fialen, Rosetten, großem Spitzbogen, Bäumen, Kopfsteinpflaster und zwei Radfahrern.
+    const a = Array.from({length:N*N}, () => "blue");
+    const px = (x,y,color) => { if (inside(x,y)) a[y*N+x]=color; };
+    const rect = (x1,y1,x2,y2,color) => { for (let y=y1; y<=y2; y++) for (let x=x1; x<=x2; x++) px(x,y,color); };
+    const hash = (x,y) => { let h=(x*73856093) ^ (y*19349663); h=Math.imul(h ^ (h>>>13),1274126177); h^=h>>>16; return (h>>>0)%100; };
+    const brick = (x,y) => hash(x,y) < 28 ? "orange" : "red";
+
+    // Bäume links und rechts (dichtes Laub mit hellen und schattigen Stellen)
+    const tree = (cx,cy,rx,ry,blossom=false) => {
+      for (let y=0; y<N; y++) for (let x=0; x<N; x++) {
+        const d=((x-cx)/rx)**2+((y-cy)/ry)**2;
+        if (d > 1.05 || (d > 0.8 && hash(x,y) < 35)) continue;
+        const h=hash(x+7,y+3);
+        px(x,y, blossom && h < 6 ? "white" : h < 18 ? "lime" : h < 34 ? "turquoise" : "green");
+      }
+    };
+    tree(3,30,7,13); tree(9,37,5,7);
+    tree(46,9,6,8,true); tree(45,22,8,13,true); tree(44,36,7,8);
+
+    // Gebäude: Torkörper x 8–41
+    const L=8, R=41;
+    // Dach hinter den Giebeln
+    for (let y=6; y<=19; y++) for (let x=L; x<=R; x++) px(x,y,y%3===0 && x%2===0 ? "red" : "orange");
+    // Vier Ziergiebel: rote Backsteinkante, weiße Putzfläche, Rosette und Lanzettfenster
+    for (const s of [10,18,26,34]) {
+      const c=s+3;
+      for (let y=2; y<=19; y++) {
+        const hw=Math.min(3.6,(y-2)*0.75);
+        for (let x=s-1; x<=s+6; x++) {
+          const off=Math.abs(x+0.5-c);
+          if (off <= hw+0.5) px(x,y, off > hw-0.6 || y < 4 ? "red" : "white");
+        }
+      }
+      for (let y=8; y<=11; y++) for (let x=s+1; x<=s+4; x++) {
+        const d=Math.hypot(x+0.5-c,y+0.5-10);
+        px(x,y, d <= 1.1 ? "red" : d <= 1.9 ? "orange" : "white");      }
+      // Zwei Lanzetten mit orangefarbenem Maßwerk und kleinen Fenstern
+      rect(s+1,13,s+4,13,"orange"); rect(s+1,14,s+1,18,"orange"); rect(s+4,14,s+4,18,"orange");
+      px(s+1,16,"black"); px(s+1,17,"black"); px(s+4,16,"black"); px(s+4,17,"black");
+    }
+    // Fialen mit Rautenmuster und Spitzen
+    for (const p of [8,16,24,32,40]) {
+      for (let y=4; y<=19; y++) for (let x=p; x<=p+1; x++) px(x,y,(x+y)%2===0 ? "orange" : "red");
+      px(p,1,"red"); px(p+1,1,"red"); px(p,2,"red"); px(p+1,2,"red"); px(p,3,"orange"); px(p+1,3,"orange");
+    }
+    // Gesims mit dunklem Zierband
+    for (let x=L; x<=R; x++) { px(x,19,"orange"); px(x,20,x%2===0 ? "black" : "red"); }
+    // Unterbau aus Backstein mit etwas Moos
+    for (let y=21; y<=42; y++) for (let x=L; x<=R; x++) {
+      const h=hash(x+11,y+5);
+      px(x,y, y<=28 && h>95 ? "lime" : y<=28 && h>92 ? "yellow" : brick(x,y));
+    }
+    // Blendnischen links (zwei) und rechts (eine breite)
+    for (const x of [9,12]) {
+      rect(x,23,x+1,24,"orange"); px(x,23,"red");
+      rect(x,25,x+1,39,"white"); px(x,36,"black"); px(x,37,"black");
+    }
+    for (let y=22; y<=26; y++) for (let x=35; x<=40; x++) {
+      const d=Math.hypot(x+0.5-38,y+0.5-24);
+      if (d <= 1.1) px(x,y,"red"); else if (d <= 2.4) px(x,y,"orange");
+    }
+    rect(36,27,39,39,"white"); rect(37,27,38,27,"orange");
+    px(38,32,"black"); px(38,33,"black");
+
+    // Großer Spitzbogen (zwei Kreisbögen mit Radius 12, Spannweite x 16–33)
+    const opening = (x,y) => {
+      if (x < 16 || x > 33 || y > 42) return false;
+      if (y >= 34) return true;
+      const d=34-(y+0.5), s=Math.sqrt(Math.max(0,144-d*d));
+      return x+0.5 >= 28-s && x+0.5 <= 22+s && d < 12;
+    };
+    for (let y=18; y<=42; y++) for (let x=L; x<=R; x++) {
+      if (opening(x,y)) continue;
+      const n1=[[1,0],[-1,0],[0,1],[1,1],[-1,1]].some(([dx,dy])=>opening(x+dx,y+dy));
+      const n2=!n1 && [[2,0],[-2,0],[0,2],[2,2],[-2,2],[1,2],[-1,2]].some(([dx,dy])=>opening(x+dx,y+dy));
+      if (n1) px(x,y,(x+y)%2===0 ? "orange" : "red");
+      else if (n2) px(x,y,"orange");
+    }
+    // Durchblick: Gitter vor Laub, Querbalken, Stadtmauer und innerer Torturm
+    for (let y=18; y<=42; y++) for (let x=16; x<=33; x++) {
+      if (!opening(x,y)) continue;
+      let color;
+      if (y <= 29) color = x%3===0 ? "black" : (hash(x,y) < 30 ? "sky" : hash(x,y) < 55 ? "lime" : "green");
+      else if (y <= 31) color = y===30 ? "orange" : "black";
+      else if (y <= 33) color = hash(x,y) < 40 ? "lime" : "green";
+      else if (x >= 27) color = "red";
+      else color = y >= 38 && x%3===1 ? "red" : "orange";
+      px(x,y,color);
+    }
+    for (const [x,y] of [[16,32],[16,33],[16,34],[16,35],[16,36],[16,37],[33,32],[33,33],[33,34],[33,35],[33,36],[33,37]]) px(x,y,"white");
+    rect(29,34,30,35,"white"); rect(29,37,30,37,"white");
+    rect(29,39,31,42,"black");
+
+    // Wiesen vorne mit Blüten
+    for (let y=43; y<=49; y++) for (let x=0; x<N; x++) {
+      const h=hash(x+3,y+17);
+      px(x,y, h<4 ? "yellow" : h<6 ? "white" : h<7 ? "pink" : h<8 ? "violet" : h<30 ? "lime" : "green");
+    }
+    // Kopfsteinpflaster vom Tor nach vorne
+    for (let y=38; y<=49; y++) {
+      const lx = y<=42 ? 17 : Math.round(17-(y-42)*1.3);
+      const rx = y<=42 ? 32 : Math.round(33+(y-42)*0.6);
+      for (let x=lx; x<=rx; x++) if (y>=43 || opening(x,y)) px(x,y,hash(x+5,y+9) < 55 ? "sky" : "white");
+    }
+    // Granitpfosten mit Geländer links
+    rect(0,43,7,43,"red"); rect(0,46,7,46,"red");
+    rect(1,40,2,48,"white"); rect(6,42,7,48,"white");
+    // Laterne rechts
+    rect(44,31,44,47,"black"); rect(43,28,45,30,"black"); px(44,29,"yellow");
+
+    // Zwei Radfahrer
+    const sprite = (x0,y0,rows) => rows.forEach((row,dy) => [...row].forEach((ch,dx) => {
+      const color={W:"white",P:"pink",O:"orange",R:"red",B:"blue",K:"black",V:"violet"}[ch];
+      if (color) px(x0+dx,y0+dy,color);
+    }));
+    sprite(27,34,[".W.",".P.","OOO","KOK","BKB","VKV",".K.",".K."]);
+    sprite(19,37,[".WWW.",".PPP.","OOWOO","OOWOO","KKOKK",".BKB.",".BKB.","VBKBV","V.K.V","..K..","..K.."]);
+    return a;
+  }
   function makeSelectedImage() {
+    if (currentImage === "neubrandenburg") return makeNeubrandenburg();
     if (currentImage === "mandala") return makeMandala();
     if (currentImage === "parrot") return makeParrot();
     if (currentImage === "toronto") return makeToronto();
@@ -1449,7 +1576,7 @@
     gameTitleEl.textContent="FaPi (Falling Pixels)";
     gameIntroEl.hidden=true;
     gameTitleEl.hidden=true;
-    const imageNames={rainbow:"Regenbogen",christmas:"Weihnachtsbaum mit Geschenken",flowers:"Blumenwiese",hearts:"Viele bunte Herzen",abstract:"Abstrakte Quadrate",vfb:"VfB Stuttgart",waterpolo:"Wasserballspieler beim Wurf",coast:"Küste mit Leuchtturm",duesseldorf:"Skyline von Düsseldorf",recorder:"Mädchen spielt Blockflöte",toronto:"CN Tower in Toronto bei Nacht mit Feuerwerk",parrot:"Bunter Papagei im Dschungel",mandala:"Buntes Mandala"};
+    const imageNames={rainbow:"Regenbogen",christmas:"Weihnachtsbaum mit Geschenken",flowers:"Blumenwiese",hearts:"Viele bunte Herzen",abstract:"Abstrakte Quadrate",vfb:"VfB Stuttgart",waterpolo:"Wasserballspieler beim Wurf",coast:"Küste mit Leuchtturm",duesseldorf:"Skyline von Düsseldorf",recorder:"Mädchen spielt Blockflöte",toronto:"CN Tower in Toronto bei Nacht mit Feuerwerk",parrot:"Bunter Papagei im Dschungel",mandala:"Buntes Mandala",neubrandenburg:"Stargarder Tor in Neubrandenburg"};
     boardEl.setAttribute("aria-label",`50 mal 50 Pixel großes Bild: ${imageNames[imageId]}`);
     imageChooser.hidden=true;
     gamePanel.hidden=false;
@@ -1506,7 +1633,8 @@ function pointsPerPixel() {
         }
 
         for (const imageId of Object.keys(sessionHighscores)) {
-          const entries = payload.highscores[imageId];
+          // Fehlt eine Liste (z. B. neues Bild, das der Server noch nicht kennt), gilt sie als leer.
+          const entries = payload.highscores[imageId] === undefined ? [] : payload.highscores[imageId];
           if (!Array.isArray(entries)) throw new Error(`Ungültige Highscore-Liste: ${imageId}`);
           sessionHighscores[imageId] = entries.slice(0, 10).map(entry => {
             if (!entry || typeof entry.name !== "string" ||
@@ -2553,6 +2681,7 @@ function pointsPerPixel() {
   document.getElementById("chooseToronto").addEventListener("click",()=>startGame("toronto"));
   document.getElementById("chooseParrot").addEventListener("click",()=>startGame("parrot"));
   document.getElementById("chooseMandala").addEventListener("click",()=>startGame("mandala"));
+  document.getElementById("chooseNeubrandenburg").addEventListener("click",()=>startGame("neubrandenburg"));
   nextRoundBtn.addEventListener("click",startNextRound);
   highscoreEntryFormEl.addEventListener("submit",submitTemporaryHighscore);
   drawPreview(document.getElementById("rainbowPreview"),makeRainbow);
@@ -2568,6 +2697,7 @@ function pointsPerPixel() {
   drawPreview(document.getElementById("torontoPreview"),makeToronto);
   drawPreview(document.getElementById("parrotPreview"),makeParrot);
   drawPreview(document.getElementById("mandalaPreview"),makeMandala);
+  drawPreview(document.getElementById("neubrandenburgPreview"),makeNeubrandenburg);
   loadHighscores();
   showImageChooser();
 })();

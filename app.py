@@ -35,7 +35,7 @@ MAX_TIME_MS = 7 * 24 * 60 * 60 * 1000
 IMAGE_IDS = (
     "rainbow", "christmas", "flowers", "hearts", "abstract", "vfb",
     "waterpolo", "coast", "duesseldorf", "recorder", "toronto", "parrot",
-    "mandala",
+    "mandala", "neubrandenburg",
 )
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
