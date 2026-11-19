@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FaPi (Falling Pixels)</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 4'%3E%3Crect width='2' height='2' fill='%23e53935'/%3E%3Crect x='2' width='2' height='2' fill='%23fdd835'/%3E%3Crect y='2' width='2' height='2' fill='%231e88e5'/%3E%3Crect x='2' y='2' width='2' height='2' fill='%2343a047'/%3E%3C/svg%3E">
 <style>
   :root { color-scheme: light; --sky:#77c9f2; --ink:#203447; --panel:#ffffff; }
   * { box-sizing:border-box; }
@@ -344,12 +345,12 @@
       <button class="action" id="restart">Neues Spiel</button>
       <button class="action secondary" id="pauseBtn" type="button" aria-pressed="false">(P)ause</button>
       <button class="action secondary" id="helpBtn" type="button">Hilfe</button>
-      <div class="side-version">Version 1.06<br>(19.11.2026)</div>
+      <div class="side-version">Version 1.07<br>(19.11.2026)</div>
     </div>
 <div class="info-panel" id="infoPanel" hidden>
     <div class="rate-row">
       <aside class="points-rate" id="pointsRate" aria-live="polite" aria-label="Aktuelle Runde, Ablageplätze und Punkte pro gesammeltem Pixel">
-        <span class="rate-meta">Runde <b id="pointsRateRound">1</b> - <b id="pointsRateSlots">3</b> <span id="pointsRateSlotsUnit">Plätze</span></span>
+        <span class="rate-meta">Runde <b id="pointsRateRound">1</b> (<b id="pointsRateSlots">3</b> <span id="pointsRateSlotsUnit">Plätze</span>)</span>
         <span class="rate-main"><span class="points-rate-label">Aktuelle Wertung</span> <strong id="pointsRateValue">3</strong> <span class="points-rate-unit" id="pointsRateUnit">Punkte je Pixel</span></span>
       </aside>
     </div>
@@ -1612,12 +1613,12 @@ function pointsPerPixel() {
     return score > last.score || (score === last.score && elapsedMs() < last.timeMs);
   }
 
-  async function showFinalScore(label) {
+  async function showFinalScore(label, reason = "") {
     finalScoreLabelEl.textContent=label;
     finalScoreValueEl.textContent=`${totalScore.toLocaleString("de-DE")} Punkte`;
     if (timerEnd === null) timerEnd = performance.now();
     updateTimerDisplay();
-    finalScoreDetailEl.textContent=`${moveCount.toLocaleString("de-DE")} Pixel gesammelt · Zeit ${formatTime(elapsedMs())}`;
+    finalScoreDetailEl.textContent=(reason ? `${reason} ` : "") + `${moveCount.toLocaleString("de-DE")} Pixel gesammelt · Zeit ${formatTime(elapsedMs())}`;
 
     // Nur ein vollständig abgeräumtes Bild darf in die Bestenliste aufgenommen werden.
     levelWasCleared = label === "Level abgeschlossen!";
@@ -2182,16 +2183,16 @@ function pointsPerPixel() {
     return arrived.length;
   }
 
-  function gameOver() {
+  function gameOver(reason = `Durch die negative Wertung (${pointsPerPixel()} je Pixel) ist dein Punktestand auf 0 gefallen.`) {
     runToken++;
     busy=false; ended=true; selected=null;
     activeMovers.forEach(m=>m.el.remove());
     activeMovers=[];
     flightLayer.innerHTML="";
     nextRoundPromptEl.hidden=true;
-    statusEl.textContent="Game Over – der Punktestand ist auf 0 gefallen.";
+    statusEl.textContent=`Game Over – ${reason}`;
     renderStock(); renderSlots();
-    showFinalScore("Game Over");
+    showFinalScore("Game Over", reason);
     updateLegendCounts();
   }
 
@@ -2247,9 +2248,12 @@ function pointsPerPixel() {
         nextRoundBtn.textContent=`Nächste Runde starten · ${activeSlotCount+1} Ablagepositionen`;
         statusEl.textContent=`Alle ${activeSlotCount} Ablagepositionen sind belegt. Starte die nächste Runde, um einen weiteren Platz freizuschalten.`;
       } else {
+        // Mit allen Ablageplätzen geht nichts mehr: Game Over, die Punkte verfallen.
         nextRoundPromptEl.hidden=true;
-        statusEl.textContent=`Runde ${roundNumber} beendet. Auch mit allen ${COLORS.length} Ablagepositionen können die Pixelketten nicht weiterlaufen. Starte ein neues Spiel.`;
-        showFinalScore("Spiel beendet");
+        totalScore=0;
+        const reason=`Alle ${COLORS.length} Ablageplätze sind belegt und es kann nichts mehr abgebaut werden. Deine Punkte sind verfallen.`;
+        statusEl.textContent=`Game Over – ${reason}`;
+        showFinalScore("Game Over", reason);
       }
       renderStock(); renderSlots();
       updateLegendCounts();
@@ -2414,8 +2418,7 @@ function pointsPerPixel() {
     statusEl.textContent=`Runde ${roundNumber}: Ein weiterer Ablageplatz ist freigeschaltet. Dein bisheriger Spielstand bleibt erhalten.`;
     // Bei 0 Punkten und negativer Wertung pro Pixel (-1 oder schlechter) ist das Spiel sofort verloren.
     if (totalScore === 0 && pointsPerPixel() < 0) {
-      gameOver();
-      statusEl.textContent=`Game Over – du hast 0 Punkte und die Wertung fällt auf ${pointsPerPixel()} pro Pixel.`;
+      gameOver(`Du hast 0 Punkte und mit ${activeSlotCount} Ablageplätzen fällt die Wertung auf ${pointsPerPixel()} je Pixel.`);
       return;
     }
     pump(runToken);
