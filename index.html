@@ -335,6 +335,11 @@
         <span class="image-choice-title">🏰 Stargarder Tor</span>
         <small>Das gotische Backsteintor in Neubrandenburg mit Radfahrern.</small>
       </button>
+      <button class="image-choice" id="chooseZingst" type="button">
+        <canvas id="zingstPreview" width="150" height="150" aria-label="Vorschau Seebrücke Zingst mit Tauchgondel"></canvas>
+        <span class="image-choice-title">⚓ Seebrücke Zingst</span>
+        <small>Die Seebrücke an der Ostsee mit der Tauchgondel.</small>
+      </button>
     </div>
     <div class="chooser-admin">
       <button class="action secondary" id="adminBtnChooser" type="button">🔐 Administration</button>
@@ -350,7 +355,7 @@
       <button class="action" id="restart">Neues Spiel</button>
       <button class="action secondary" id="pauseBtn" type="button" aria-pressed="false">(P)ause</button>
       <button class="action secondary" id="helpBtn" type="button">Hilfe</button>
-      <div class="side-version">Version 1.08<br>(19.11.2026)</div>
+      <div class="side-version">Version 1.09<br>(19.11.2026)</div>
     </div>
 <div class="info-panel" id="infoPanel" hidden>
     <div class="rate-row">
@@ -478,7 +483,7 @@
         </div>
         <div class="admin-group">
           <h3>Alle Highscores löschen</h3>
-          <p>Leert sämtliche 14 Bestenlisten. Vor dem Löschen erstellt der Server automatisch eine Sicherungskopie.</p>
+          <p>Leert sämtliche 15 Bestenlisten. Vor dem Löschen erstellt der Server automatisch eine Sicherungskopie.</p>
           <button class="action danger" id="adminDeleteAll" type="button">Alle Highscores löschen</button>
         </div>
         <p class="admin-footnote">Jeder Löschvorgang wird serverseitig geprüft und vorab gesichert.</p>
@@ -573,10 +578,10 @@
   let timerEnd = null;     // Zeitpunkt, an dem das Spiel endet
   setInterval(() => updateTimerDisplay(), 100);
   // Lokaler Cache der dauerhaft auf dem Server gespeicherten Top-10-Listen.
-  const sessionHighscores = {rainbow:[], christmas:[], flowers:[], hearts:[], abstract:[], vfb:[], waterpolo:[], coast:[], duesseldorf:[], recorder:[], toronto:[], parrot:[], mandala:[], neubrandenburg:[]};
+  const sessionHighscores = {rainbow:[], christmas:[], flowers:[], hearts:[], abstract:[], vfb:[], waterpolo:[], coast:[], duesseldorf:[], recorder:[], toronto:[], parrot:[], mandala:[], neubrandenburg:[], zingst:[]};
   let highscoresLoaded = false;
   let highscoreLoadPromise = null;
-  const imageDisplayNames = {rainbow:"Regenbogen", christmas:"Weihnachtsbaum", flowers:"Blumenwiese", hearts:"Herzen", abstract:"Abstrakte Quadrate", vfb:"VfB Stuttgart", waterpolo:"Wasserball", coast:"Küste mit Leuchtturm", duesseldorf:"Skyline Düsseldorf", recorder:"Blockflöte", toronto:"CN Tower bei Nacht", parrot:"Papagei", mandala:"Mandala", neubrandenburg:"Stargarder Tor"};
+  const imageDisplayNames = {rainbow:"Regenbogen", christmas:"Weihnachtsbaum", flowers:"Blumenwiese", hearts:"Herzen", abstract:"Abstrakte Quadrate", vfb:"VfB Stuttgart", waterpolo:"Wasserball", coast:"Küste mit Leuchtturm", duesseldorf:"Skyline Düsseldorf", recorder:"Blockflöte", toronto:"CN Tower bei Nacht", parrot:"Papagei", mandala:"Mandala", neubrandenburg:"Stargarder Tor", zingst:"Seebrücke Zingst"};
   let zeroOrder = [];      // Farben in der Reihenfolge, in der sie auf 0 gefallen sind (bleiben am Listenende)
   let levelWasCleared = false;
   let highscoreEntrySaved = false;
@@ -1523,7 +1528,118 @@
     sprite(19,37,[".WWW.",".PPP.","OOWOO","OOWOO","KKOKK",".BKB.",".BKB.","VBKBV","V.K.V","..K..","..K.."]);
     return a;
   }
+  function makeZingst() {
+    // 50×50 Pixelmotiv: Seebrücke Zingst mit Tauchgondel, Holzgeländern, Laternen, Fahnen und Ostsee.
+    const a = Array.from({length:N*N}, () => "blue");
+    const px = (x,y,color) => { if (inside(x,y)) a[y*N+x]=color; };
+    const rect = (x1,y1,x2,y2,color) => { for (let y=y1; y<=y2; y++) for (let x=x1; x<=x2; x++) px(x,y,color); };
+    const hash = (x,y) => { let h=(x*73856093) ^ (y*19349663); h=Math.imul(h ^ (h>>>13),1274126177); h^=h>>>16; return (h>>>0)%100; };
+    const H = 20;                                                      // letzte Himmelszeile, darunter die Ostsee
+
+    // Himmel: oben kräftiges Blau, zum Horizont hin heller
+    for (let y=0; y<=H; y++) for (let x=0; x<N; x++) px(x,y, y>=15 || (y>=10 && hash(x,y) < (y-9)*16) ? "sky" : "blue");
+    // Wolken
+    const cloud = (cx,cy,rx,ry) => {
+      for (let y=0; y<=H; y++) for (let x=0; x<N; x++) {
+        const d=((x-cx)/rx)**2+((y-cy)/ry)**2;
+        if (d<=1) px(x,y, y>cy+ry*0.4 && d>0.45 ? "sky" : "white");
+      }
+    };
+    cloud(4,3,6,2.5); cloud(10,5,4,1.8); cloud(46,13,6,2); cloud(37,15,5,1.5); cloud(3,14,5,1.5);
+    // Hinter der linken Fahne: weiße Wolke hinter dem blauen Streifen, heller Dunst hinter dem weißen Streifen
+    for (let y=0; y<=5; y++) for (let x=15; x<=32; x++) if (((x-24)/8)**2+((y-2.5)/3)**2<=1) px(x,y,"white");
+    for (let y=5; y<=9; y++) for (let x=15; x<=32; x++) if (((x-24)/7.5)**2+((y-7)/2.2)**2<=1) px(x,y,"sky");
+
+    // Ostsee mit Wellen und Schaumkronen
+    for (let y=H+1; y<N; y++) for (let x=0; x<N; x++) {
+      const h=hash(Math.floor((x+(y%2)*2)/4),y+7);                  // waagerecht gestreckte Wellen
+      px(x,y, y===H+1 ? "blue" : h<4 ? "white" : h<(y<26 ? 25 : 45) ? "turquoise" : "blue");
+    }
+
+    // Grüne Boje mit hellem Kopf links im Wasser
+    px(3,24,"black"); px(3,25,"black");
+    rect(2,26,4,26,"lime"); rect(1,27,5,27,"lime");
+    rect(1,28,5,30,"green"); rect(0,31,6,31,"white");
+
+    // Tauchgondel: silberne, gestreifte Kuppel mit Spitze, türkisfarbene Kabine mit Fenstern, roter Standfuß
+    const gx=14;
+    rect(gx,1,gx,2,"white"); rect(gx-1,3,gx+1,4,"white");
+    for (let y=5; y<=16; y++) {
+      const hw=Math.max(1.5,8*Math.sqrt(1-((y-16.5)/12)**2));
+      for (let x=Math.ceil(gx-hw); x<=Math.floor(gx+hw); x++) {
+        const off=(x-gx)/hw;
+        const band=Math.floor((Math.asin(off)+Math.PI/2)/(Math.PI/8));
+        px(x,y, band%2===0 ? "white" : "sky");
+      }
+    }
+    rect(6,17,22,17,"black");                                          // Kuppelrand
+    rect(7,18,21,23,"turquoise"); rect(6,18,6,23,"black"); rect(22,18,22,23,"black");
+    for (let x=8; x<=20; x+=2) { rect(x,19,x,21,"blue"); px(x,19,"sky"); }
+    rect(7,24,21,24,"black");
+    // Durchgehende schwarze Außenkontur um Spitze, Kuppel und Kabine
+    const domeHw = y => Math.max(1.5,8*Math.sqrt(1-((y-16.5)/12)**2));
+    const inGondola = (x,y) =>
+      (x===gx && y>=1 && y<=2) || (Math.abs(x-gx)<=1 && y>=3 && y<=4) ||
+      (y>=5 && y<=16 && x>=Math.ceil(gx-domeHw(y)) && x<=Math.floor(gx+domeHw(y))) ||
+      (y===17 && x>=6 && x<=22) || (y>=18 && y<=24 && x>=7 && x<=21);
+    for (let y=0; y<=25; y++) for (let x=3; x<=25; x++) {
+      if (!inGondola(x,y) && [[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy]) => inGondola(x+dx,y+dy))) px(x,y,"black");
+    }
+    rect(13,25,15,32,"red");
+
+    // Laternen am Geländer
+    rect(24,10,24,23,"black"); rect(23,8,25,9,"turquoise");
+
+    // Fahnenmasten links und rechts über dem Steg mit Schild „Tauchgondel Zingst“ und zwei Fahnen
+    rect(28,2,28,20,"white"); rect(33,2,33,20,"white");
+    rect(27,9,34,11,"white");
+    for (const x of [28,29,30,32,33]) px(x,10,"black");
+    // Beide Fahnen 7×6 Pixel: links Vorpommern (Blau-Weiß), rechts Deutschland
+    ["blue","blue","blue","white","white","white"].forEach((color,i) => rect(21,2+i,27,2+i,color));
+    ["black","black","red","red","yellow","yellow"].forEach((color,i) => rect(34,2+i,40,2+i,color));
+
+    // Querbrücke am Ende der Seebrücke mit Geländer, Kiosk und Spaziergängern
+    rect(37,24,49,25,"white"); rect(37,26,49,26,"black");
+    rect(37,21,49,21,"orange"); rect(37,23,49,23,"orange");
+    for (let x=37; x<=49; x+=3) rect(x,21,x,23,"orange");
+    rect(46,27,47,30,"red");                                           // roter Stützpfahl unter der Querbrücke
+    rect(47,15,47,20,"black"); rect(46,14,48,14,"turquoise");          // Laterne auf der Querbrücke
+    rect(30,16,32,20,"turquoise"); px(31,19,"black"); px(31,20,"black");
+    const person = (x,color) => { px(x,20,"pink"); rect(x,21,x,22,color); px(x,23,"black"); };
+    person(38,"red"); person(40,"violet"); person(42,"yellow"); person(44,"red"); person(49,"violet");
+
+    // Holzsteg in Zentralperspektive mit Planken und Schattenkante
+    const xl = y => 30-(y-21)*0.75, xr = y => 31+(y-21)*0.65;
+    for (let y=21; y<N; y++) {
+      const l=xl(y), r=xr(y);
+      for (let x=Math.ceil(l); x<=Math.floor(r); x++) {
+        const u=(x-l)/(r-l);
+        px(x,y, u<0.12 ? "blue" : (u*7)%1 < 0.14 ? "sky" : "white");
+      }
+    }
+    // Geländer links und rechts: Handlauf und Mittellauf mit dunkler Unterkante
+    const rail = (x0,y0,x1,y1,th0,th1) => {
+      const steps=Math.max(Math.abs(x1-x0),Math.abs(y1-y0))*2, pts=[];
+      for (let i=0; i<=steps; i++) {
+        const t=i/steps;
+        pts.push([Math.round(x0+(x1-x0)*t), Math.round(y0+(y1-y0)*t), Math.round(th0+(th1-th0)*t)]);
+      }
+      for (const [x,y,th] of pts) px(x,y+th,"black");
+      for (const [x,y,th] of pts) for (let k=0; k<th; k++) px(x,y+k,"orange");
+    };
+    rail(0,37,30,21,2,1); rail(0,49,30,21,2,1);
+    rail(49,32,31,21,2,1); rail(49,41,31,21,2,1);
+    // Pfosten, nach vorne hin größer
+    for (const yp of [48,40,34,29,26,24,22]) {
+      const hgt=(yp-21)*0.6, top=Math.round(yp-hgt), w=Math.max(1,Math.round(hgt/9));
+      const lx=Math.round(xl(yp)), rx=Math.round(xr(yp));
+      rect(lx-w+1,top,lx,yp,"orange"); rect(lx-w,top,lx-w,yp,"black");
+      rect(rx,top,rx+w-1,yp,"orange"); rect(rx+w,top,rx+w,yp,"black");
+    }
+    return a;
+  }
   function makeSelectedImage() {
+    if (currentImage === "zingst") return makeZingst();
     if (currentImage === "neubrandenburg") return makeNeubrandenburg();
     if (currentImage === "mandala") return makeMandala();
     if (currentImage === "parrot") return makeParrot();
@@ -1576,7 +1692,7 @@
     gameTitleEl.textContent="FaPi (Falling Pixels)";
     gameIntroEl.hidden=true;
     gameTitleEl.hidden=true;
-    const imageNames={rainbow:"Regenbogen",christmas:"Weihnachtsbaum mit Geschenken",flowers:"Blumenwiese",hearts:"Viele bunte Herzen",abstract:"Abstrakte Quadrate",vfb:"VfB Stuttgart",waterpolo:"Wasserballspieler beim Wurf",coast:"Küste mit Leuchtturm",duesseldorf:"Skyline von Düsseldorf",recorder:"Mädchen spielt Blockflöte",toronto:"CN Tower in Toronto bei Nacht mit Feuerwerk",parrot:"Bunter Papagei im Dschungel",mandala:"Buntes Mandala",neubrandenburg:"Stargarder Tor in Neubrandenburg"};
+    const imageNames={rainbow:"Regenbogen",christmas:"Weihnachtsbaum mit Geschenken",flowers:"Blumenwiese",hearts:"Viele bunte Herzen",abstract:"Abstrakte Quadrate",vfb:"VfB Stuttgart",waterpolo:"Wasserballspieler beim Wurf",coast:"Küste mit Leuchtturm",duesseldorf:"Skyline von Düsseldorf",recorder:"Mädchen spielt Blockflöte",toronto:"CN Tower in Toronto bei Nacht mit Feuerwerk",parrot:"Bunter Papagei im Dschungel",mandala:"Buntes Mandala",neubrandenburg:"Stargarder Tor in Neubrandenburg",zingst:"Seebrücke Zingst mit Tauchgondel"};
     boardEl.setAttribute("aria-label",`50 mal 50 Pixel großes Bild: ${imageNames[imageId]}`);
     imageChooser.hidden=true;
     gamePanel.hidden=false;
@@ -2682,6 +2798,7 @@ function pointsPerPixel() {
   document.getElementById("chooseParrot").addEventListener("click",()=>startGame("parrot"));
   document.getElementById("chooseMandala").addEventListener("click",()=>startGame("mandala"));
   document.getElementById("chooseNeubrandenburg").addEventListener("click",()=>startGame("neubrandenburg"));
+  document.getElementById("chooseZingst").addEventListener("click",()=>startGame("zingst"));
   nextRoundBtn.addEventListener("click",startNextRound);
   highscoreEntryFormEl.addEventListener("submit",submitTemporaryHighscore);
   drawPreview(document.getElementById("rainbowPreview"),makeRainbow);
@@ -2698,6 +2815,7 @@ function pointsPerPixel() {
   drawPreview(document.getElementById("parrotPreview"),makeParrot);
   drawPreview(document.getElementById("mandalaPreview"),makeMandala);
   drawPreview(document.getElementById("neubrandenburgPreview"),makeNeubrandenburg);
+  drawPreview(document.getElementById("zingstPreview"),makeZingst);
   loadHighscores();
   showImageChooser();
 })();
