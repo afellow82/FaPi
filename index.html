@@ -49,6 +49,14 @@
   }
   .pixel { min-width:0; min-height:0; border-radius:1px; }
   #flight-layer { position:absolute; inset:0; pointer-events:none; z-index:5; }
+  /* Pause: Bild und Vorrat werden vollständig abgedeckt und sind nicht bedienbar. */
+  #gamePanel.is-paused .game-area, #gamePanel.is-paused .stock-side { position:relative; }
+  #gamePanel.is-paused .game-area::after, #gamePanel.is-paused .stock-side::after {
+    content:"⏸ Pause"; position:absolute; inset:0; z-index:50; display:flex; align-items:center; justify-content:center;
+    border-radius:14px; background:#dfeaf1; color:#244b63; font-size:1.6rem; font-weight:900; cursor:default;
+  }
+  #gamePanel.is-paused .game-area::after { content:"⏸ Pause – weiter mit P"; }
+  #gamePanel.is-paused .stock-side::after { content:"⏸"; }
   .flying-pixel {
     position:absolute; width:var(--cell); height:var(--cell); border-radius:2px;
     z-index:6; box-shadow:0 1px 4px #17384a55; will-change:left,top;
@@ -59,7 +67,13 @@
   .side-column { display:flex; flex-direction:column; gap:10px; min-width:0; }
   .slots { display:grid; grid-template-columns:repeat(1,minmax(0,1fr)); gap:10px; margin-top:0; }
   .points-rate { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; min-width:0; padding:6px 7px; border:1px solid #bcd6e4; border-radius:12px; background:#e8f4fb; color:#244b63; text-align:center; }
-  .rate-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.3fr); gap:8px; }
+  .rate-row { display:grid; grid-template-columns:minmax(0,1fr); gap:8px; }
+  .rate-meta { font-size:.72rem; line-height:1.2; font-weight:800; color:#244b63; }
+  .rate-meta b { font-weight:950; font-variant-numeric:tabular-nums; }
+  .points-rate .rate-meta #pointsRateRound { font-size:1.5rem; line-height:1; vertical-align:-2px; }
+  .rate-main { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:center; gap:0 4px; font-size:.72rem; }
+  .points-rate .rate-main strong, .points-rate .rate-main > span { font-size:inherit; line-height:1.2; }
+  .points-rate .rate-main strong { font-weight:950; }
   .round-tile { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:6px 7px; border:1px solid #bcd6e4; border-radius:12px; background:#e8f4fb; color:#244b63; text-align:center; }
   .round-tile .points-rate-label { color:#4d7087; }
   .round-tile strong { font-size:1.7rem; line-height:1; font-weight:950; font-variant-numeric:tabular-nums; }
@@ -67,7 +81,7 @@
   .points-rate strong { font-size:1.7rem; line-height:1; font-weight:950; font-variant-numeric:tabular-nums; }
   .points-rate-unit { font-size:.72rem; line-height:1.2; font-weight:750; }
   .points-rate.no-points { border-color:#cbd8df; background:#f1f5f7; color:#526a7b; }
-  .points-rate.no-points .points-rate-label { color:#607789; }
+  .points-rate .rate-meta, .points-rate .points-rate-label { color:inherit; }
   .slot {
     min-height:72px; border:2px dashed #9bb5c5; border-radius:12px; background:#f8fcfe;
     display:flex; align-items:center; justify-content:center; flex-direction:column;
@@ -152,6 +166,7 @@
   button.next-round-button::before { content:"▶"; font-size:.9em; }
   button.next-round-button:hover { background:#105875; transform:translateY(-1px); }
   button.next-round-button:focus-visible { outline:3px solid #203447; outline-offset:3px; }
+  .final-score.confirm-dialog { z-index:110; }
   .final-score { position:fixed; inset:0; z-index:100; display:flex; align-items:center; justify-content:center; padding:16px; background:#14283566; text-align:center; }
   .final-card { width:100%; max-width:560px; max-height:100%; overflow:auto; padding:22px 20px; border:3px solid #176b91; border-radius:18px; background:#fff; box-shadow:0 14px 40px #00000055; }
   .help-card { text-align:left; max-width:600px; }
@@ -173,7 +188,6 @@
   .highscore-form-row input { min-width:0; flex:1; border:1px solid #c8d8e0; border-radius:8px; padding:9px 10px; font:inherit; }
   .highscore-entry-status { color:#38576b; font-weight:750; }
   .chooser-admin { display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:14px; padding-top:12px; border-top:1px solid #d5e5ee; }
-  .chooser-admin p { margin:0; color:#607789; font-size:.84rem; }
   .admin-card { max-width:620px; text-align:left; color:var(--ink); }
   .admin-card h2 { margin:0 0 8px; text-align:center; font-size:1.3rem; }
   .admin-card > p { margin:7px 0 12px; color:#526a7b; font-size:.9rem; line-height:1.45; }
@@ -317,7 +331,6 @@
       </button>
     </div>
     <div class="chooser-admin">
-      <p>Administrator? Hier geht es zur Verwaltung der Bestenlisten.</p>
       <button class="action secondary" id="adminBtnChooser" type="button">🔐 Administration</button>
     </div>
   </section>
@@ -329,20 +342,15 @@
       <div class="side-title">FaPi <small>(Falling Pixels)</small></div>
       <button class="action secondary" id="changeImage">Bild wechseln</button>
       <button class="action" id="restart">Neues Spiel</button>
+      <button class="action secondary" id="pauseBtn" type="button" aria-pressed="false">(P)ause</button>
       <button class="action secondary" id="helpBtn" type="button">Hilfe</button>
-      <button class="action secondary" id="adminBtnGame" type="button">🔐 Administration</button>
-      <div class="side-version">Version 1.04<br>(19.11.2026)</div>
+      <div class="side-version">Version 1.06<br>(19.11.2026)</div>
     </div>
 <div class="info-panel" id="infoPanel" hidden>
     <div class="rate-row">
-      <aside class="round-tile" aria-label="Aktuelle Runde">
-        <span class="points-rate-label">Runde</span>
-        <strong id="pointsRateRound">1</strong>
-      </aside>
-      <aside class="points-rate" id="pointsRate" aria-live="polite" aria-label="Aktuelle Punkte pro gesammeltem Pixel">
-        <span class="points-rate-label">Aktuelle Wertung</span>
-        <strong id="pointsRateValue">3</strong>
-        <span class="points-rate-unit" id="pointsRateUnit">Punkte je Pixel</span>
+      <aside class="points-rate" id="pointsRate" aria-live="polite" aria-label="Aktuelle Runde, Ablageplätze und Punkte pro gesammeltem Pixel">
+        <span class="rate-meta">Runde <b id="pointsRateRound">1</b> - <b id="pointsRateSlots">3</b> <span id="pointsRateSlotsUnit">Plätze</span></span>
+        <span class="rate-main"><span class="points-rate-label">Aktuelle Wertung</span> <strong id="pointsRateValue">3</strong> <span class="points-rate-unit" id="pointsRateUnit">Punkte je Pixel</span></span>
       </aside>
     </div>
     <aside class="legend" id="legend" aria-label="Punktestand und verbleibende Pixel je Farbe"></aside>
@@ -392,13 +400,14 @@
         <li>Block auf einen freien Ablageplatz <b>ziehen</b>, oder anklicken und dann den Platz anklicken.</li>
         <li><b>Doppelklick</b> auf den Block oder die Taste <b>1, 2, 3</b> legt ihn auf den ersten freien Platz.</li>
         <li>Sind alle Plätze belegt, startet die nächste Runde mit einem Platz mehr.</li>
+        <li>Mit dem Button <b>Pause</b> oder der Taste <b>P</b> hältst du das Spiel samt Zeit an; Bild und Vorrat werden solange abgedeckt.</li>
       </ul>
       <h3>Ziel</h3>
       <p>Räume das Bild so schnell und mit so vielen Punkten wie möglich ab, um in die Top 10 zu kommen (bei gleichen Punkten gewinnt die kürzere Zeit). Fällt der Punktestand wieder auf 0, ist das Spiel verloren: Game Over.</p>
       <h3>Glück und Zufall</h3>
       <p>FaPi ist ein Glücksspiel: Die Farbblöcke werden bei jedem Spiel zufällig auf die drei Vorratsreihen verteilt und gemischt. Diese Anordnung hat sehr große Auswirkungen auf die erzielbaren Punkte.</p>
       <h3>Highscores</h3>
-      <p>Die Highscores werden dauerhaft auf dem Server gespeichert. Für jedes Motiv gibt es eine eigene Top 10, die für alle Besucher sichtbar ist. Bei gleicher Punktzahl gewinnt die kürzere Spielzeit.</p>
+      <p>Die Highscores werden dauerhaft auf dem Server gespeichert. Für jedes Bild gibt es eine eigene Top 10, die für alle Besucher sichtbar ist. Bei gleicher Punktzahl gewinnt die kürzere Spielzeit.</p>
       <div class="final-actions"><button class="action" id="helpClose" type="button">Schließen</button></div>
      </div>
     </div>
@@ -427,10 +436,21 @@
     </div>
   </section>
 
+  <div class="final-score confirm-dialog" id="confirmDialog" hidden>
+    <div class="final-card" role="alertdialog" aria-modal="true" aria-labelledby="confirmDialogTitle" aria-describedby="confirmDialogText">
+      <h2 id="confirmDialogTitle"></h2>
+      <p id="confirmDialogText"></p>
+      <div class="final-actions">
+        <button class="action" id="confirmDialogCancel" type="button"></button>
+        <button class="action secondary" id="confirmDialogOk" type="button"></button>
+      </div>
+    </div>
+  </div>
+
   <div class="final-score" id="adminOverlay" hidden aria-live="polite">
     <div class="final-card admin-card" role="dialog" aria-modal="true" aria-labelledby="adminTitle">
       <h2 id="adminTitle">🔐 FaPi – Administration</h2>
-      <p>Hier kannst du die dauerhaften Bestenlisten verwalten. Die Anmeldung erfolgt über Cloudflare Access.</p>
+      <p>Verwaltung der Bestenlisten</p>
       <div class="admin-status" id="adminAuthStatus" role="status">Administratorzugriff wird geprüft …</div>
 
       <div class="admin-login-area" id="adminLoginArea" hidden>
@@ -443,11 +463,11 @@
 
       <div class="admin-controls" id="adminControls" hidden>
         <div class="admin-group">
-          <h3>Highscores eines Motivs löschen</h3>
-          <p>Entfernt alle Einträge der ausgewählten Bestenliste. Die übrigen Motive bleiben unverändert.</p>
+          <h3>Highscores eines Bildes löschen</h3>
+          <p>Entfernt alle Einträge der ausgewählten Bestenliste. Die übrigen Bilder bleiben unverändert.</p>
           <div class="admin-select-row">
-            <select id="adminImageSelect" aria-label="Motiv auswählen"></select>
-            <button class="action danger" id="adminDeleteImage" type="button">Motiv löschen</button>
+            <select id="adminImageSelect" aria-label="Bild auswählen"></select>
+            <button class="action danger" id="adminDeleteImage" type="button">Highscore Bild löschen</button>
           </div>
         </div>
         <div class="admin-group">
@@ -564,10 +584,47 @@
   let slotLastMover = Array(COLORS.length).fill(null);
   let slotLaunchReady = Array(COLORS.length).fill(false);
 
+  let paused = false;
+  let pausedAt = null;      // performance.now() beim Start der Pause
+  let resumeWaiters = [];   // wartende Spielschleifen, die beim Fortsetzen weiterlaufen
+
   function elapsedMs() {
     if (timerStart === null) return 0;
-    return (timerEnd !== null ? timerEnd : performance.now()) - timerStart;
+    if (timerEnd !== null) return timerEnd - timerStart;
+    return (paused ? pausedAt : performance.now()) - timerStart;
   }
+  // Eigener Bestätigungsdialog statt window.confirm(), damit der Browser
+  // die Rückfrage nicht dauerhaft unterdrücken kann. Liefert true bei „OK“.
+  const confirmDialogEl = document.getElementById("confirmDialog");
+  let confirmDialogResolve = null;
+  function closeConfirmDialog(result) {
+    if (!confirmDialogResolve) return;
+    const resolve = confirmDialogResolve;
+    confirmDialogResolve = null;
+    confirmDialogEl.hidden = true;
+    resolve(result);
+  }
+  function showConfirmDialog({title, text, okLabel = "OK", cancelLabel = "Abbrechen"}) {
+    closeConfirmDialog(false);
+    document.getElementById("confirmDialogTitle").textContent = title;
+    document.getElementById("confirmDialogText").textContent = text;
+    document.getElementById("confirmDialogOk").textContent = okLabel;
+    document.getElementById("confirmDialogCancel").textContent = cancelLabel;
+    confirmDialogEl.hidden = false;
+    document.getElementById("confirmDialogCancel").focus();
+    return new Promise(resolve => { confirmDialogResolve = resolve; });
+  }
+  document.getElementById("confirmDialogCancel").addEventListener("click", () => closeConfirmDialog(false));
+  document.getElementById("confirmDialogOk").addEventListener("click", () => closeConfirmDialog(true));
+  confirmDialogEl.addEventListener("click", event => { if (event.target === confirmDialogEl) closeConfirmDialog(false); });
+  // Capture-Phase: Solange der Dialog offen ist, erreichen Tasten (Escape, N, B, P, 1–3 …) das Spiel nicht.
+  document.addEventListener("keydown", event => {
+    if (confirmDialogEl.hidden) return;
+    if (event.key === "Escape") { event.preventDefault(); closeConfirmDialog(false); }
+    if (event.key !== "Tab" && event.key !== "Enter" && event.key !== " ") event.stopImmediatePropagation();
+  }, true);
+
+  const waitWhilePaused =() => paused ? new Promise(resolve => resumeWaiters.push(resolve)) : Promise.resolve();
   function formatTime(ms) {
     const t = Math.floor(ms / 100) / 10;
     const m = Math.floor(t / 60);
@@ -1367,6 +1424,7 @@
 
   function showImageChooser() {
     runToken++;
+    setPaused(false);
     busy=false;
     ended=true;
     selected=null;
@@ -1421,9 +1479,11 @@ function pointsPerPixel() {
     const value=pointsPerPixel();
     pointsRateValueEl.textContent=String(value);
     document.getElementById("pointsRateRound").textContent=String(roundNumber);
+    document.getElementById("pointsRateSlots").textContent=String(activeSlotCount);
+    document.getElementById("pointsRateSlotsUnit").textContent=activeSlotCount===1 ? "Platz" : "Plätze";
     pointsRateUnitEl.textContent=Math.abs(value)===1 ? "Punkt je Pixel" : "Punkte je Pixel";
     pointsRateEl.classList.toggle("no-points", value===0);
-    pointsRateEl.setAttribute("aria-label", `${value} ${value===1 ? "Punkt" : "Punkte"} pro gesammeltem Pixel bei ${activeSlotCount} Ablagepositionen`);
+    pointsRateEl.setAttribute("aria-label", `Runde ${roundNumber}, ${activeSlotCount} Ablagepositionen, ${value} ${Math.abs(value)===1 ? "Punkt" : "Punkte"} pro gesammeltem Pixel`);
   }
 
   async function loadHighscores(force = false) {
@@ -1725,9 +1785,15 @@ function pointsPerPixel() {
     const imageId = scope === "image" ? adminImageSelect.value : null;
     const imageName = imageId ? imageDisplayNames[imageId] : null;
     const confirmation = scope === "all"
-      ? "Wirklich ALLE Highscores aller 13 Motive löschen? Vorher wird automatisch eine Sicherungskopie erstellt."
+      ? "Wirklich ALLE Highscores aller 13 Bilder löschen? Vorher wird automatisch eine Sicherungskopie erstellt."
       : `Wirklich alle Highscores für „${imageName}“ löschen? Vorher wird automatisch eine Sicherungskopie erstellt.`;
-    if (!window.confirm(confirmation)) return;
+    const confirmed = await showConfirmDialog({
+      title: scope === "all" ? "Alle Highscores löschen?" : "Highscores dieses Bildes löschen?",
+      text: confirmation,
+      cancelLabel: "Abbrechen",
+      okLabel: "Löschen"
+    });
+    if (!confirmed || !adminAuthenticated || adminActionInProgress) return;
 
     adminActionInProgress = true;
     adminDeleteImageBtn.disabled = true;
@@ -2147,6 +2213,8 @@ function pointsPerPixel() {
 
       const moved=advanceMoversOneTick();
       await sleep(Number(speedEl.value));
+      if (paused) await waitWhilePaused();
+      if (token !== runToken) return;
       const arrived=removeArrivedMovers();
 
       // Falls alles blockiert ist, wartet das Spiel auf eine zusätzliche Farbe
@@ -2220,7 +2288,7 @@ function pointsPerPixel() {
   }
 
   function placeColor(stackIndex, blockId, slotIndex) {
-    if (ended || slotIndex < 0 || slotIndex >= activeSlotCount || slots[slotIndex]) return false;
+    if (ended || paused || slotIndex < 0 || slotIndex >= activeSlotCount || slots[slotIndex]) return false;
     if (!Number.isInteger(stackIndex) || !stacks[stackIndex]) return false;
     const block=stacks[stackIndex][0];
     if (!block || block.uid !== blockId) return false;
@@ -2269,7 +2337,7 @@ function pointsPerPixel() {
     for (const color of COLORS) {
       const total=countColor(color.id);
       if (total===0) continue;
-      if (total<3) throw new Error(`Das Motiv enthält für ${color.name} nur ${total} Pixel. Für mindestens drei Blöcke werden mindestens drei Pixel benötigt.`);
+      if (total<3) throw new Error(`Das Bild enthält für ${color.name} nur ${total} Pixel. Für mindestens drei Blöcke werden mindestens drei Pixel benötigt.`);
       const minBlockSize=20, maxBlockSize=80;
       const blockCount=Math.max(3,Math.ceil(total/maxBlockSize));
       let remaining=total;
@@ -2308,6 +2376,7 @@ function pointsPerPixel() {
 
   function startRound(positionCount) {
     runToken++;
+    setPaused(false);
     busy=false; ended=false; selected=null; moveCount=0; totalScore=0;
     timerStart=null; timerEnd=null; scoreWasPositive=false;
     hideFinalScore();
@@ -2379,14 +2448,69 @@ function pointsPerPixel() {
     quickPlaceTopBlock(stackIndex);
   });
 
-  document.getElementById("restart").addEventListener("click",newGame);
+  // Warnt, wenn ein Top-10-Ergebnis noch nicht eingetragen wurde und sonst verloren ginge.
+  async function runUnlessUnsavedHighscore(action) {
+    const unsavedHighscore = !finalScoreEl.hidden && !highscoreEntryEl.hidden
+      && !highscoreEntryFormEl.hidden && !highscoreEntrySaved;
+    if (unsavedHighscore) {
+      const proceed = await showConfirmDialog({
+        title: "Highscore noch nicht eingetragen",
+        text: "Du hast dich noch nicht in die Highscoreliste eingetragen. Deine Punktzahl geht verloren, wenn du jetzt fortfährst.",
+        cancelLabel: "Zurück zum Eintragen",
+        okLabel: "Trotzdem fortfahren"
+      });
+      if (!proceed) { highscoreNameEl.focus(); return; }
+    }
+    action();
+  }
+  const guardedNewGame = () => runUnlessUnsavedHighscore(newGame);
+  const guardedImageChooser = () => runUnlessUnsavedHighscore(showImageChooser);
+
+  // Pause: hält Spielschleife und Zeitmessung an und deckt Bild und Vorrat ab.
+  function setPaused(value) {
+    if (value === paused) return;
+    const pauseBtn = document.getElementById("pauseBtn");
+    if (value) {
+      paused = true;
+      pausedAt = performance.now();
+    } else {
+      // Die Pausendauer wird nicht zur Spielzeit gezählt.
+      if (timerStart !== null && pausedAt !== null) timerStart += performance.now() - pausedAt;
+      paused = false;
+      pausedAt = null;
+      const waiters = resumeWaiters;
+      resumeWaiters = [];
+      waiters.forEach(resolve => resolve());
+    }
+    gamePanel.classList.toggle("is-paused", paused);
+    pauseBtn.textContent = paused ? "Weiter (P)" : "(P)ause";
+    pauseBtn.setAttribute("aria-pressed", String(paused));
+    updateTimerDisplay();
+  }
+  function togglePause() {
+    if (!paused && (ended || gamePanel.hidden || !finalScoreEl.hidden || !nextRoundPromptEl.hidden)) return;
+    setPaused(!paused);
+    statusEl.textContent = paused
+      ? "Pause – Bild und Vorrat sind ausgeblendet. Drücke P oder „Weiter“, um fortzufahren."
+      : "Weiter geht's!";
+  }
+  document.getElementById("pauseBtn").addEventListener("click", togglePause);
+  document.addEventListener("keydown", event => {
+    if (event.key.toLowerCase() !== "p" || event.repeat || event.ctrlKey || event.metaKey || event.altKey) return;
+    const target = event.target;
+    const tagName = target && target.tagName ? target.tagName.toUpperCase() : "";
+    if (target?.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(tagName)) return;
+    if (!imageChooser.hidden || !helpOverlay.hidden || !adminOverlayEl.hidden) return;
+    event.preventDefault();
+    togglePause();
+  });
+
+  document.getElementById("restart").addEventListener("click",guardedNewGame);
   const helpOverlay = document.getElementById("helpOverlay");
   const setHelp = open => { helpOverlay.hidden = !open; if (open) document.getElementById("helpClose").focus(); };
   document.getElementById("helpBtn").addEventListener("click",()=>setHelp(true));
   document.getElementById("helpClose").addEventListener("click",()=>setHelp(false));
-  document.getElementById("adminBtnChooser").addEventListener("click",openAdminPanel);
-  document.getElementById("adminBtnGame").addEventListener("click",openAdminPanel);
-  adminCheckBtn.addEventListener("click",checkAdminAccess);
+  document.getElementById("adminBtnChooser").addEventListener("click",openAdminPanel);  adminCheckBtn.addEventListener("click",checkAdminAccess);
   document.getElementById("adminClose").addEventListener("click",closeAdminPanel);
   adminOverlayEl.addEventListener("click",event=>{ if (event.target===adminOverlayEl) closeAdminPanel(); });
   document.addEventListener("keydown",event=>{ if (event.key === "Escape" && !adminOverlayEl.hidden) closeAdminPanel(); });
@@ -2408,11 +2532,11 @@ function pointsPerPixel() {
     if (target?.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(tagName)) return;
     if (finalScoreEl.hidden || !imageChooser.hidden || !helpOverlay.hidden) return;
     event.preventDefault();
-    if (key === "n") newGame(); else showImageChooser();
+    if (key === "n") guardedNewGame(); else guardedImageChooser();
   });
-  document.getElementById("finalRestart").addEventListener("click",newGame);
-  document.getElementById("finalChange").addEventListener("click",showImageChooser);
-  document.getElementById("changeImage").addEventListener("click",showImageChooser);
+  document.getElementById("finalRestart").addEventListener("click",guardedNewGame);
+  document.getElementById("finalChange").addEventListener("click",guardedImageChooser);
+  document.getElementById("changeImage").addEventListener("click",guardedImageChooser);
   document.getElementById("chooseRainbow").addEventListener("click",()=>startGame("rainbow"));
   document.getElementById("chooseChristmas").addEventListener("click",()=>startGame("christmas"));
   document.getElementById("chooseFlowers").addEventListener("click",()=>startGame("flowers"));
