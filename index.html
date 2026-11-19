@@ -172,6 +172,27 @@
   .highscore-form-row { display:flex; gap:8px; }
   .highscore-form-row input { min-width:0; flex:1; border:1px solid #c8d8e0; border-radius:8px; padding:9px 10px; font:inherit; }
   .highscore-entry-status { color:#38576b; font-weight:750; }
+  .chooser-admin { display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:14px; padding-top:12px; border-top:1px solid #d5e5ee; }
+  .chooser-admin p { margin:0; color:#607789; font-size:.84rem; }
+  .admin-card { max-width:620px; text-align:left; color:var(--ink); }
+  .admin-card h2 { margin:0 0 8px; text-align:center; font-size:1.3rem; }
+  .admin-card > p { margin:7px 0 12px; color:#526a7b; font-size:.9rem; line-height:1.45; }
+  .admin-status { margin:10px 0; padding:10px 12px; border:1px solid #c8dce7; border-radius:9px; background:#eef6fa; color:#244b63; font-size:.88rem; font-weight:700; overflow-wrap:anywhere; }
+  .admin-login-area[hidden], .admin-controls[hidden] { display:none; }
+  .admin-login-area { padding:12px; border:1px solid #d5e5ee; border-radius:10px; background:#f8fcfe; }
+  .admin-login-area p { margin:0 0 10px; color:#526a7b; font-size:.86rem; line-height:1.45; }
+  .admin-login-actions { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+  .admin-login-link { display:inline-flex; align-items:center; justify-content:center; min-height:40px; padding:9px 13px; border-radius:9px; background:#176b91; color:#fff; font-weight:750; text-decoration:none; }
+  .admin-login-link:hover { background:#105875; }
+  .admin-group { margin:12px 0; padding:13px; border:1px solid #d5e5ee; border-radius:11px; background:#f8fcfe; }
+  .admin-group h3 { margin:0 0 5px; color:#244b63; font-size:1rem; }
+  .admin-group p { margin:0 0 10px; color:#607789; font-size:.84rem; line-height:1.4; }
+  .admin-select-row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .admin-select-row select { flex:1 1 220px; min-width:0; border:1px solid #c8d8e0; border-radius:8px; padding:10px; background:#fff; color:var(--ink); font:inherit; }
+  button.action.danger { background:#a93226; }
+  button.action.danger:hover { background:#84291f; }
+  button.action:disabled { opacity:.6; cursor:wait; }
+  .admin-footnote { margin-top:8px !important; color:#758b99 !important; font-size:.76rem !important; }
   .session-highscores { padding-top:8px; border-top:2px solid #d7e6ed; }
   .session-highscores h3 { margin:0 0 3px; color:#38576b; font-size:.9rem; }
   .session-highscores .session-note { margin:0 0 7px; color:#758b99; font-size:.68rem; line-height:1.25; }
@@ -295,6 +316,10 @@
         <small>Ein symmetrisches Mandala aus Ringen mit bunten Blütenblättern.</small>
       </button>
     </div>
+    <div class="chooser-admin">
+      <p>Administrator? Hier geht es zur Verwaltung der Bestenlisten.</p>
+      <button class="action secondary" id="adminBtnChooser" type="button">🔐 Administration</button>
+    </div>
   </section>
 
   <section class="panel" id="gamePanel" hidden>
@@ -305,7 +330,8 @@
       <button class="action secondary" id="changeImage">Bild wechseln</button>
       <button class="action" id="restart">Neues Spiel</button>
       <button class="action secondary" id="helpBtn" type="button">Hilfe</button>
-      <div class="side-version">Version 1.02<br>(13.11.2026)</div>
+      <button class="action secondary" id="adminBtnGame" type="button">🔐 Administration</button>
+      <div class="side-version">Version 1.04<br>(19.11.2026)</div>
     </div>
 <div class="info-panel" id="infoPanel" hidden>
     <div class="rate-row">
@@ -372,7 +398,7 @@
       <h3>Glück und Zufall</h3>
       <p>FaPi ist ein Glücksspiel: Die Farbblöcke werden bei jedem Spiel zufällig auf die drei Vorratsreihen verteilt und gemischt. Diese Anordnung hat sehr große Auswirkungen auf die erzielbaren Punkte.</p>
       <h3>Highscores</h3>
-      <p>Die Highscores werden aktuell nicht dauerhaft gespeichert. Beim Neuladen der Webseite gehen sie verloren.</p>
+      <p>Die Highscores werden dauerhaft auf dem Server gespeichert. Für jedes Motiv gibt es eine eigene Top 10, die für alle Besucher sichtbar ist. Bei gleicher Punktzahl gewinnt die kürzere Spielzeit.</p>
       <div class="final-actions"><button class="action" id="helpClose" type="button">Schließen</button></div>
      </div>
     </div>
@@ -401,7 +427,43 @@
     </div>
   </section>
 
+  <div class="final-score" id="adminOverlay" hidden aria-live="polite">
+    <div class="final-card admin-card" role="dialog" aria-modal="true" aria-labelledby="adminTitle">
+      <h2 id="adminTitle">🔐 FaPi – Administration</h2>
+      <p>Hier kannst du die dauerhaften Bestenlisten verwalten. Die Anmeldung erfolgt über Cloudflare Access.</p>
+      <div class="admin-status" id="adminAuthStatus" role="status">Administratorzugriff wird geprüft …</div>
 
+      <div class="admin-login-area" id="adminLoginArea" hidden>
+        <p>Öffne die Cloudflare-Anmeldung in einem neuen Tab. Melde dich dort mit deinem Administrator-Konto an. Kehre anschließend hierher zurück und klicke auf „Zugriff prüfen“.</p>
+        <div class="admin-login-actions">
+          <a class="admin-login-link" id="adminLoginLink" href="/api/admin/check" target="_blank" rel="noopener noreferrer">Cloudflare-Anmeldung öffnen</a>
+          <button class="action secondary" id="adminCheckBtn" type="button">Zugriff prüfen</button>
+        </div>
+      </div>
+
+      <div class="admin-controls" id="adminControls" hidden>
+        <div class="admin-group">
+          <h3>Highscores eines Motivs löschen</h3>
+          <p>Entfernt alle Einträge der ausgewählten Bestenliste. Die übrigen Motive bleiben unverändert.</p>
+          <div class="admin-select-row">
+            <select id="adminImageSelect" aria-label="Motiv auswählen"></select>
+            <button class="action danger" id="adminDeleteImage" type="button">Motiv löschen</button>
+          </div>
+        </div>
+        <div class="admin-group">
+          <h3>Alle Highscores löschen</h3>
+          <p>Leert sämtliche 13 Bestenlisten. Vor dem Löschen erstellt der Server automatisch eine Sicherungskopie.</p>
+          <button class="action danger" id="adminDeleteAll" type="button">Alle Highscores löschen</button>
+        </div>
+        <p class="admin-footnote">Jeder Löschvorgang wird serverseitig geprüft und vorab gesichert.</p>
+      </div>
+
+      <p class="admin-status" id="adminActionStatus" role="status" hidden></p>
+      <div class="final-actions">
+        <button class="action secondary" id="adminClose" type="button">Schließen</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Unsichtbar: feste Spielwerte (Tempo 15 ms / Feld, Kettenabstand 10 Schritte) und interne Statusmeldung -->
   <div hidden>
@@ -448,6 +510,15 @@
   const highscoreEntryFormEl = document.getElementById("highscoreEntryForm");
   const highscoreNameEl = document.getElementById("highscoreName");
   const highscoreEntryStatusEl = document.getElementById("highscoreEntryStatus");
+  const adminOverlayEl = document.getElementById("adminOverlay");
+  const adminAuthStatusEl = document.getElementById("adminAuthStatus");
+  const adminLoginAreaEl = document.getElementById("adminLoginArea");
+  const adminControlsEl = document.getElementById("adminControls");
+  const adminCheckBtn = document.getElementById("adminCheckBtn");
+  const adminImageSelect = document.getElementById("adminImageSelect");
+  const adminDeleteImageBtn = document.getElementById("adminDeleteImage");
+  const adminDeleteAllBtn = document.getElementById("adminDeleteAll");
+  const adminActionStatusEl = document.getElementById("adminActionStatus");
   const nextRoundBtn = document.getElementById("nextRound");
   const nextRoundPromptEl = document.getElementById("nextRoundPrompt");
   const pointsRateValueEl = document.getElementById("pointsRateValue");
@@ -475,12 +546,17 @@
   let timerStart = null;   // performance.now() beim Ablegen der ersten Farbe
   let timerEnd = null;     // Zeitpunkt, an dem das Spiel endet
   setInterval(() => updateTimerDisplay(), 100);
-  // Nur Arbeitsspeicher: Beim Neuladen der Seite sind alle Top-3-Listen leer.
+  // Lokaler Cache der dauerhaft auf dem Server gespeicherten Top-10-Listen.
   const sessionHighscores = {rainbow:[], christmas:[], flowers:[], hearts:[], abstract:[], vfb:[], waterpolo:[], coast:[], duesseldorf:[], recorder:[], toronto:[], parrot:[], mandala:[]};
+  let highscoresLoaded = false;
+  let highscoreLoadPromise = null;
   const imageDisplayNames = {rainbow:"Regenbogen", christmas:"Weihnachtsbaum", flowers:"Blumenwiese", hearts:"Herzen", abstract:"Abstrakte Quadrate", vfb:"VfB Stuttgart", waterpolo:"Wasserball", coast:"Küste mit Leuchtturm", duesseldorf:"Skyline Düsseldorf", recorder:"Blockflöte", toronto:"CN Tower bei Nacht", parrot:"Papagei", mandala:"Mandala"};
   let zeroOrder = [];      // Farben in der Reihenfolge, in der sie auf 0 gefallen sind (bleiben am Listenende)
   let levelWasCleared = false;
   let highscoreEntrySaved = false;
+  let adminAuthenticated = false;
+  let adminCheckInProgress = false;
+  let adminActionInProgress = false;
   let roundNumber = 1;
   let runToken = 0;
   let activeMovers = [];
@@ -1307,7 +1383,9 @@
     stockPanel.hidden=true;
   }
 
-  function startGame(imageId) {
+  async function startGame(imageId) {
+    // Vor Spielbeginn möglichst die aktuelle, gemeinsame Server-Rangliste laden.
+    await loadHighscores();
     currentImage=imageId;
     gameTitleEl.textContent="FaPi (Falling Pixels)";
     gameIntroEl.hidden=true;
@@ -1348,6 +1426,61 @@ function pointsPerPixel() {
     pointsRateEl.setAttribute("aria-label", `${value} ${value===1 ? "Punkt" : "Punkte"} pro gesammeltem Pixel bei ${activeSlotCount} Ablagepositionen`);
   }
 
+  async function loadHighscores(force = false) {
+    if (highscoresLoaded && !force) return true;
+    if (highscoreLoadPromise) return highscoreLoadPromise;
+
+    highscoreLoadPromise = (async () => {
+      try {
+        const response = await fetch("/api/highscores", {
+          method: "GET",
+          cache: "no-store",
+          headers: {"Accept": "application/json"}
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const payload = await response.json();
+        if (!payload || !payload.highscores || typeof payload.highscores !== "object") {
+          throw new Error("Ungültige Antwort der Highscore-API");
+        }
+
+        for (const imageId of Object.keys(sessionHighscores)) {
+          const entries = payload.highscores[imageId];
+          if (!Array.isArray(entries)) throw new Error(`Ungültige Highscore-Liste: ${imageId}`);
+          sessionHighscores[imageId] = entries.slice(0, 10).map(entry => {
+            if (!entry || typeof entry.name !== "string" ||
+                !Number.isFinite(Number(entry.score)) ||
+                !Number.isFinite(Number(entry.timeMs)) ||
+                !Number.isFinite(Number(entry.timestamp))) {
+              throw new Error(`Ungültiger Highscore-Eintrag: ${imageId}`);
+            }
+            return {
+              id: typeof entry.id === "string" ? entry.id : "",
+              name: entry.name,
+              score: Number(entry.score),
+              timeMs: Number(entry.timeMs),
+              timestamp: Number(entry.timestamp),
+              isLatest: false
+            };
+          });
+        }
+
+        highscoresLoaded = true;
+        return true;
+      } catch (error) {
+        highscoresLoaded = false;
+        console.error("FaPi: Highscores konnten nicht geladen werden.", error);
+        return false;
+      }
+    })();
+
+    try {
+      return await highscoreLoadPromise;
+    } finally {
+      highscoreLoadPromise = null;
+    }
+  }
+
   function renderLegend() {
     // Farben mit 0 Pixeln behalten ihre Position am Ende: wer zuerst auf 0 fiel, steht ganz unten.
     for (const color of COLORS) if (countColor(color.id)===0 && !zeroOrder.includes(color.id)) zeroOrder.push(color.id);
@@ -1367,21 +1500,21 @@ function pointsPerPixel() {
       `<span title="Noch ${count} Pixel im Bild"><span class="legend-name"><i class="swatch" style="background:${color.hex}"></i>${color.name}</span><strong class="pixel-count" data-color-count="${color.id}">${count}</strong></span>`
     ).join("") + `</div></div>` + progressHtml;
 
-    // Separate Top 10 je Motiv, ausschließlich im Arbeitsspeicher dieser Seite.
+    // Separate, dauerhaft gespeicherte Top 10 je Motiv.
     const section=document.createElement("section");
     section.className="session-highscores";
-    section.setAttribute("aria-label", `Temporäre Top 10 für ${imageDisplayNames[currentImage] || "dieses Bild"}`);
+    section.setAttribute("aria-label", `Top 10 für ${imageDisplayNames[currentImage] || "dieses Bild"}`);
     const heading=document.createElement("h3");
     heading.textContent=`🏆 Top 10 · ${imageDisplayNames[currentImage] || "Bild"}`;
     const note=document.createElement("p");
     note.className="session-note";
-    note.textContent="Nur für diese Sitzung · nach Neuladen gelöscht";
+    note.textContent=highscoresLoaded ? "Dauerhaft gespeichert · für alle Spieler" : "Bestenliste derzeit nicht verfügbar";
     const list=document.createElement("ol");
     const entries=sessionHighscores[currentImage] || [];
     if (!entries.length) {
       const empty=document.createElement("li");
       empty.className="empty";
-      empty.textContent="Noch keine Einträge. Räume das Bild vollständig ab!";
+      empty.textContent=highscoresLoaded ? "Noch keine Einträge. Räume das Bild vollständig ab!" : "Highscores konnten nicht geladen werden.";
       list.appendChild(empty);
     } else {
       entries.forEach((entry,index)=>{
@@ -1412,65 +1545,236 @@ function pointsPerPixel() {
   }
 
   function qualifiesForTopTen(score) {
+    if (!highscoresLoaded) return false;
     const entries=sessionHighscores[currentImage] || [];
     if (entries.length < 10) return true;
     const last = entries[entries.length-1];
     return score > last.score || (score === last.score && elapsedMs() < last.timeMs);
   }
 
-  function showFinalScore(label) {
+  async function showFinalScore(label) {
     finalScoreLabelEl.textContent=label;
     finalScoreValueEl.textContent=`${totalScore.toLocaleString("de-DE")} Punkte`;
     if (timerEnd === null) timerEnd = performance.now();
     updateTimerDisplay();
     finalScoreDetailEl.textContent=`${moveCount.toLocaleString("de-DE")} Pixel gesammelt · Zeit ${formatTime(elapsedMs())}`;
-    finalScoreEl.hidden=false;
 
     // Nur ein vollständig abgeräumtes Bild darf in die Bestenliste aufgenommen werden.
     levelWasCleared = label === "Level abgeschlossen!";
     highscoreEntrySaved = false;
     highscoreEntryEl.hidden = !levelWasCleared;
-    highscoreEntryFormEl.hidden = !levelWasCleared || !qualifiesForTopTen(totalScore);
+    highscoreEntryFormEl.hidden = true;
     highscoreNameEl.value="";
+
     if (levelWasCleared) {
-      // Reicht die Punktzahl nicht für die Top 10, entfallen Überschrift und Eintragen-Hinweis.
-      const noEntry = highscoreEntryFormEl.hidden;
-      document.getElementById("highscoreEntryTitle").hidden = noEntry;
-      highscoreEntryHintEl.hidden = noEntry;
-      highscoreEntryHintEl.textContent = `Geschafft! Trage einen Namen ein, um ${totalScore.toLocaleString("de-DE")} Punkte in die Top 10 für ${imageDisplayNames[currentImage]} aufzunehmen.`;
-      highscoreEntryStatusEl.textContent = highscoreEntryFormEl.hidden
-        ? "Deine Punktzahl reicht diesmal nicht für die Top 10."
-        : "Du hast die Top 10 erreicht – gib deinen Namen ein.";
-      if (!highscoreEntryFormEl.hidden) {
-        setTimeout(() => highscoreNameEl.focus(), 0);
+      // Direkt vor der Qualifikationsprüfung die gemeinsame Serverliste aktualisieren.
+      highscoreEntryStatusEl.textContent="Aktuelle Bestenliste wird geprüft …";
+      const loaded = await loadHighscores(true);
+      if (loaded) {
+        renderLegend();
+        highscoreEntryFormEl.hidden = !qualifiesForTopTen(totalScore);
+        const noEntry = highscoreEntryFormEl.hidden;
+        document.getElementById("highscoreEntryTitle").hidden = noEntry;
+        highscoreEntryHintEl.hidden = noEntry;
+        highscoreEntryHintEl.textContent = `Geschafft! Trage einen Namen ein, um ${totalScore.toLocaleString("de-DE")} Punkte in die Top 10 für ${imageDisplayNames[currentImage]} aufzunehmen.`;
+        highscoreEntryStatusEl.textContent = noEntry
+          ? "Deine Punktzahl reicht diesmal nicht für die Top 10."
+          : "Du hast die Top 10 erreicht – gib deinen Namen ein.";
+        if (!noEntry) setTimeout(() => highscoreNameEl.focus(), 0);
+      } else {
+        document.getElementById("highscoreEntryTitle").hidden = true;
+        highscoreEntryHintEl.hidden = true;
+        highscoreEntryStatusEl.textContent = "Die Bestenliste ist derzeit nicht erreichbar. Dein Ergebnis wurde nicht gespeichert. Bitte später erneut versuchen.";
       }
     } else {
       highscoreEntryStatusEl.textContent="";
     }
+
+    finalScoreEl.hidden=false;
   }
 
-  function submitTemporaryHighscore(event) {
+  async function submitTemporaryHighscore(event) {
     event.preventDefault();
     if (!levelWasCleared || highscoreEntrySaved || !currentImage) return;
+
+    const submitButton = highscoreEntryFormEl.querySelector("button[type=submit]");
+    if (submitButton?.disabled) return;
+
     // Ohne Eingabe wird der Eintrag als "<ohne Name>" gespeichert.
     const name=highscoreNameEl.value.trim().replace(/\s+/g," ").slice(0,20) || "<ohne Name>";
+    const payload = {image:currentImage, name, score:totalScore, timeMs:elapsedMs()};
 
-    const entries=sessionHighscores[currentImage];
-    if (!qualifiesForTopTen(totalScore)) {
+    if (submitButton) submitButton.disabled = true;
+    highscoreEntryStatusEl.textContent="Dein Highscore wird gespeichert …";
+
+    try {
+      const response = await fetch("/api/highscores", {
+        method: "POST",
+        cache: "no-store",
+        headers: {"Content-Type":"application/json", "Accept":"application/json"},
+        body: JSON.stringify(payload)
+      });
+      const result = await response.json().catch(() => ({}));
+
+      if (response.status === 409 && result.error === "not_in_top_10") {
+        const refreshed = await loadHighscores(true);
+        highscoreEntryFormEl.hidden = true;
+        if (refreshed) renderLegend();
+        highscoreEntryStatusEl.textContent = "Inzwischen haben andere Spieler bessere Ergebnisse eingetragen. Deine Punktzahl liegt leider nicht mehr in den Top 10.";
+        return;
+      }
+      if (!response.ok) throw new Error(result.error || `HTTP ${response.status}`);
+      if (!Array.isArray(result.entries) || !result.entry || !Number.isInteger(result.rank)) {
+        throw new Error("Ungültige Antwort der Highscore-API");
+      }
+
+      sessionHighscores[currentImage] = result.entries.map(entry => ({
+        id: typeof entry.id === "string" ? entry.id : "",
+        name: entry.name,
+        score: Number(entry.score),
+        timeMs: Number(entry.timeMs),
+        timestamp: Number(entry.timestamp),
+        isLatest: entry.id === result.entry.id
+      }));
+      highscoresLoaded = true;
+      highscoreEntrySaved=true;
       highscoreEntryFormEl.hidden=true;
-      highscoreEntryStatusEl.textContent="Deine Punktzahl reicht leider nicht mehr für die Top 10.";
-      return;
+      highscoreEntryStatusEl.textContent=name==="<ohne Name>"
+        ? `🎉 Du bist auf Platz ${result.rank}!`
+        : `🎉 ${name}, du bist auf Platz ${result.rank}!`;
+      renderLegend();
+    } catch (error) {
+      console.error("FaPi: Highscore konnte nicht gespeichert werden.", error);
+      highscoreEntryStatusEl.textContent = "Dein Highscore konnte nicht gespeichert werden. Bitte prüfe die Verbindung und versuche es erneut.";
+    } finally {
+      if (submitButton) submitButton.disabled = false;
     }
-    const entry={name, score:totalScore, timeMs:elapsedMs(), timestamp:Date.now(), isLatest:true};
-    entries.forEach(existing=>existing.isLatest=false);
-    entries.push(entry);
-    entries.sort((a,b)=>b.score-a.score || a.timeMs-b.timeMs || a.timestamp-b.timestamp);
-    entries.splice(10);
-    const rank=entries.indexOf(entry)+1;
-    highscoreEntrySaved=true;
-    highscoreEntryFormEl.hidden=true;
-    highscoreEntryStatusEl.textContent=name==="<ohne Name>" ? `🎉 Du bist auf Platz ${rank}!` : `🎉 ${name}, du bist auf Platz ${rank}!`;
-    renderLegend();
+  }
+
+  function setAdminAuthentication(authenticated, message) {
+    adminAuthenticated = authenticated;
+    adminControlsEl.hidden = !authenticated;
+    adminLoginAreaEl.hidden = authenticated;
+    adminAuthStatusEl.textContent = message;
+  }
+
+  async function checkAdminAccess() {
+    if (adminCheckInProgress) return false;
+    adminCheckInProgress = true;
+    adminCheckBtn.disabled = true;
+    adminAuthStatusEl.textContent = "Administratorzugriff wird geprüft …";
+    adminActionStatusEl.hidden = true;
+
+    try {
+      const response = await fetch("/api/admin/check", {
+        method: "GET",
+        cache: "no-store",
+        credentials: "same-origin",
+        redirect: "manual",
+        headers: {"Accept":"application/json"}
+      });
+
+      // Cloudflare Access liefert ohne aktive Sitzung einen Redirect zur Anmeldung.
+      // Mit redirect: manual wird dieser nicht im Hintergrund verfolgt.
+      if (response.type === "opaqueredirect" || response.status === 0) {
+        setAdminAuthentication(false, "Noch keine aktive Administrator-Anmeldung erkannt.");
+        return false;
+      }
+
+      const result = await response.json().catch(() => ({}));
+      if (response.ok && result.authenticated === true) {
+        setAdminAuthentication(true, "Administratorzugriff bestätigt. Die Verwaltungsfunktionen sind freigeschaltet.");
+        return true;
+      }
+
+      if (result.error === "admin_not_authorized") {
+        setAdminAuthentication(false, "Du bist angemeldet, aber dieses Konto ist nicht als FaPi-Administrator zugelassen.");
+      } else if (result.error === "admin_auth_required" || response.status === 401) {
+        setAdminAuthentication(false, "Noch keine aktive Administrator-Anmeldung erkannt.");
+      } else {
+        setAdminAuthentication(false, "Die Administratorprüfung ist fehlgeschlagen. Bitte Anmeldung und Verbindung prüfen.");
+      }
+      return false;
+    } catch (error) {
+      console.error("FaPi: Administratorzugriff konnte nicht geprüft werden.", error);
+      setAdminAuthentication(false, "Die Administratorprüfung ist derzeit nicht erreichbar.");
+      return false;
+    } finally {
+      adminCheckInProgress = false;
+      adminCheckBtn.disabled = false;
+    }
+  }
+
+  async function openAdminPanel() {
+    adminOverlayEl.hidden = false;
+    adminActionStatusEl.hidden = true;
+    adminActionStatusEl.textContent = "";
+    adminControlsEl.hidden = true;
+    adminLoginAreaEl.hidden = false;
+    adminAuthStatusEl.textContent = "Administratorzugriff wird geprüft …";
+    await checkAdminAccess();
+  }
+
+  function closeAdminPanel() {
+    adminOverlayEl.hidden = true;
+  }
+
+  async function deleteHighscores(scope) {
+    if (!adminAuthenticated || adminActionInProgress) return;
+
+    const imageId = scope === "image" ? adminImageSelect.value : null;
+    const imageName = imageId ? imageDisplayNames[imageId] : null;
+    const confirmation = scope === "all"
+      ? "Wirklich ALLE Highscores aller 13 Motive löschen? Vorher wird automatisch eine Sicherungskopie erstellt."
+      : `Wirklich alle Highscores für „${imageName}“ löschen? Vorher wird automatisch eine Sicherungskopie erstellt.`;
+    if (!window.confirm(confirmation)) return;
+
+    adminActionInProgress = true;
+    adminDeleteImageBtn.disabled = true;
+    adminDeleteAllBtn.disabled = true;
+    adminActionStatusEl.hidden = false;
+    adminActionStatusEl.textContent = "Löschvorgang wird ausgeführt …";
+
+    try {
+      const endpoint = scope === "all"
+        ? "/api/admin/highscores"
+        : `/api/admin/highscores/${encodeURIComponent(imageId)}`;
+      const response = await fetch(endpoint, {
+        method: "DELETE",
+        cache: "no-store",
+        credentials: "same-origin",
+        redirect: "manual",
+        headers: {"Accept":"application/json"}
+      });
+
+      if (response.type === "opaqueredirect" || response.status === 0) {
+        setAdminAuthentication(false, "Deine Cloudflare-Anmeldung ist nicht mehr aktiv. Bitte melde dich erneut an.");
+        adminActionStatusEl.textContent = "Es wurde nichts gelöscht. Bitte melde dich erneut an und prüfe den Zugriff.";
+        return;
+      }
+
+      const result = await response.json().catch(() => ({}));
+      if (response.status === 401 || response.status === 403) {
+        setAdminAuthentication(false, "Der Server hat den Administratorzugriff nicht bestätigt.");
+        throw new Error("Administratorzugriff verweigert. Bitte Anmeldung erneut prüfen.");
+      }
+      if (!response.ok || result.ok !== true) {
+        throw new Error(result.error || `HTTP ${response.status}`);
+      }
+
+      const refreshed = await loadHighscores(true);
+      if (currentImage && refreshed) renderLegend();
+
+      const description = scope === "all" ? "Alle Bestenlisten" : `Die Bestenliste „${imageName}“`;
+      adminActionStatusEl.textContent = `${description} wurde geleert. ${Number(result.deleted) || 0} Einträge gelöscht. Sicherung: ${result.backup || "erstellt"}.`;
+    } catch (error) {
+      console.error("FaPi: Highscores konnten nicht gelöscht werden.", error);
+      adminActionStatusEl.textContent = `Löschen fehlgeschlagen: ${error.message || "Unbekannter Fehler"}`;
+    } finally {
+      adminActionInProgress = false;
+      adminDeleteImageBtn.disabled = false;
+      adminDeleteAllBtn.disabled = false;
+    }
   }
 
   function hideFinalScore() {
@@ -2080,6 +2384,20 @@ function pointsPerPixel() {
   const setHelp = open => { helpOverlay.hidden = !open; if (open) document.getElementById("helpClose").focus(); };
   document.getElementById("helpBtn").addEventListener("click",()=>setHelp(true));
   document.getElementById("helpClose").addEventListener("click",()=>setHelp(false));
+  document.getElementById("adminBtnChooser").addEventListener("click",openAdminPanel);
+  document.getElementById("adminBtnGame").addEventListener("click",openAdminPanel);
+  adminCheckBtn.addEventListener("click",checkAdminAccess);
+  document.getElementById("adminClose").addEventListener("click",closeAdminPanel);
+  adminOverlayEl.addEventListener("click",event=>{ if (event.target===adminOverlayEl) closeAdminPanel(); });
+  document.addEventListener("keydown",event=>{ if (event.key === "Escape" && !adminOverlayEl.hidden) closeAdminPanel(); });
+  adminDeleteImageBtn.addEventListener("click",()=>deleteHighscores("image"));
+  adminDeleteAllBtn.addEventListener("click",()=>deleteHighscores("all"));
+  for (const [imageId, imageName] of Object.entries(imageDisplayNames)) {
+    const option = document.createElement("option");
+    option.value = imageId;
+    option.textContent = imageName;
+    adminImageSelect.appendChild(option);
+  }
   helpOverlay.addEventListener("click",e=>{ if (e.target===helpOverlay) setHelp(false); });
   document.addEventListener("keydown",e=>{ if (e.key==="Escape" && !helpOverlay.hidden) setHelp(false); });
   document.addEventListener("keydown", event => {
@@ -2123,6 +2441,7 @@ function pointsPerPixel() {
   drawPreview(document.getElementById("torontoPreview"),makeToronto);
   drawPreview(document.getElementById("parrotPreview"),makeParrot);
   drawPreview(document.getElementById("mandalaPreview"),makeMandala);
+  loadHighscores();
   showImageChooser();
 })();
 </script>
