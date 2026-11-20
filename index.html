@@ -146,6 +146,8 @@
   .score-counter { display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:2px; margin:0 0 2px; padding:7px 12px; border-radius:10px; background:#e8f4fb; color:#244b63; }
   .legend .score-counter span { display:block; font-size:.78rem; font-weight:750; color:#4d7087; }
   .score-counter strong { font-size:1.5rem; line-height:1; font-weight:900; font-variant-numeric:tabular-nums; }
+  .legend .score-counter.unwinnable { background:#fbe3e0; color:#a93226; outline:2px solid #a93226; }
+  .legend .score-counter.unwinnable span { color:#a93226; }
   .legend .score-counter.time-counter { background:#fff4cf; color:#58430a; }
   .legend .score-counter.time-counter span { color:#79652b; }
   /* Farbliste spaltenweise sortiert: erst die linke Spalte (Rang 1–6), dann die rechte (Rang 7–12) */
@@ -207,6 +209,16 @@
   button.action.danger { background:#a93226; }
   button.action.danger:hover { background:#84291f; }
   button.action:disabled { opacity:.6; cursor:wait; }
+  .admin-ranking-wrap { max-height:320px; overflow:auto; border:1px solid #d5e5ee; border-radius:8px; background:#fff; }
+  .admin-ranking { width:100%; border-collapse:collapse; font-size:.84rem; }
+  .admin-ranking th, .admin-ranking td { padding:6px 8px; border-bottom:1px solid #e6eff4; text-align:left; vertical-align:top; }
+  .admin-ranking th { position:sticky; top:0; background:#eef6fa; color:#244b63; font-size:.76rem; }
+  .admin-ranking td.num, .admin-ranking th.num { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .admin-ranking td.player { white-space:pre-wrap; overflow-wrap:anywhere; font-weight:700; }
+  .admin-ranking td.detail { color:#607789; font-size:.74rem; }
+  .admin-ranking tr.top1 td { background:#fff4cf; }
+  .admin-ranking-empty { padding:10px; color:#8295a1; text-align:center; font-size:.84rem; }
+  .admin-group-head { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
   .admin-footnote { margin-top:8px !important; color:#758b99 !important; font-size:.76rem !important; }
   .session-highscores { padding-top:8px; border-top:2px solid #d7e6ed; }
   .session-highscores h3 { margin:0 0 3px; color:#38576b; font-size:.9rem; }
@@ -355,7 +367,7 @@
       <button class="action" id="restart">Neues Spiel</button>
       <button class="action secondary" id="pauseBtn" type="button" aria-pressed="false">(P)ause</button>
       <button class="action secondary" id="helpBtn" type="button">Hilfe</button>
-      <div class="side-version">Version 1.09<br>(19.11.2026)</div>
+      <div class="side-version">Version 1.11<br>(20.11.2026)</div>
     </div>
 <div class="info-panel" id="infoPanel" hidden>
     <div class="rate-row">
@@ -474,6 +486,14 @@
 
       <div class="admin-controls" id="adminControls" hidden>
         <div class="admin-group">
+          <div class="admin-group-head">
+            <h3>🏆 Übergreifende Highscore-Liste</h3>
+            <button class="action secondary" id="adminRankingRefresh" type="button">Aktualisieren</button>
+          </div>
+          <p>Punkte je Platzierung in den Bild-Bestenlisten: Platz 1 = 10 Punkte, Platz 2 = 9 Punkte … Platz 10 = 1 Punkt. Namen werden exakt verglichen – auch kleinste Abweichungen (z. B. Groß-/Kleinschreibung) zählen als eigener Spieler.</p>
+          <div class="admin-ranking-wrap" id="adminRanking"></div>
+        </div>
+        <div class="admin-group">
           <h3>Highscores eines Bildes löschen</h3>
           <p>Entfernt alle Einträge der ausgewählten Bestenliste. Die übrigen Bilder bleiben unverändert.</p>
           <div class="admin-select-row">
@@ -483,7 +503,7 @@
         </div>
         <div class="admin-group">
           <h3>Alle Highscores löschen</h3>
-          <p>Leert sämtliche 15 Bestenlisten. Vor dem Löschen erstellt der Server automatisch eine Sicherungskopie.</p>
+          <p>Leert sämtliche <span id="adminImageCount">–</span> Bestenlisten. Vor dem Löschen erstellt der Server automatisch eine Sicherungskopie.</p>
           <button class="action danger" id="adminDeleteAll" type="button">Alle Highscores löschen</button>
         </div>
         <p class="admin-footnote">Jeder Löschvorgang wird serverseitig geprüft und vorab gesichert.</p>
@@ -578,10 +598,11 @@
   let timerEnd = null;     // Zeitpunkt, an dem das Spiel endet
   setInterval(() => updateTimerDisplay(), 100);
   // Lokaler Cache der dauerhaft auf dem Server gespeicherten Top-10-Listen.
-  const sessionHighscores = {rainbow:[], christmas:[], flowers:[], hearts:[], abstract:[], vfb:[], waterpolo:[], coast:[], duesseldorf:[], recorder:[], toronto:[], parrot:[], mandala:[], neubrandenburg:[], zingst:[]};
+  const imageDisplayNames = {rainbow:"Regenbogen", christmas:"Weihnachtsbaum", flowers:"Blumenwiese", hearts:"Herzen", abstract:"Abstrakte Quadrate", vfb:"VfB Stuttgart", waterpolo:"Wasserball", coast:"Küste mit Leuchtturm", duesseldorf:"Skyline Düsseldorf", recorder:"Blockflöte", toronto:"CN Tower bei Nacht", parrot:"Papagei", mandala:"Mandala", neubrandenburg:"Stargarder Tor", zingst:"Seebrücke Zingst"};
+  // Je Bild eine eigene Bestenliste – wird automatisch aus imageDisplayNames erzeugt.
+  const sessionHighscores = Object.fromEntries(Object.keys(imageDisplayNames).map(imageId => [imageId, []]));
   let highscoresLoaded = false;
   let highscoreLoadPromise = null;
-  const imageDisplayNames = {rainbow:"Regenbogen", christmas:"Weihnachtsbaum", flowers:"Blumenwiese", hearts:"Herzen", abstract:"Abstrakte Quadrate", vfb:"VfB Stuttgart", waterpolo:"Wasserball", coast:"Küste mit Leuchtturm", duesseldorf:"Skyline Düsseldorf", recorder:"Blockflöte", toronto:"CN Tower bei Nacht", parrot:"Papagei", mandala:"Mandala", neubrandenburg:"Stargarder Tor", zingst:"Seebrücke Zingst"};
   let zeroOrder = [];      // Farben in der Reihenfolge, in der sie auf 0 gefallen sind (bleiben am Listenende)
   let levelWasCleared = false;
   let highscoreEntrySaved = false;
@@ -1801,7 +1822,15 @@ function pointsPerPixel() {
     const clearedPixels=totalPixels-remainingPixels;
     const percent=Math.floor(clearedPixels/totalPixels*100);
     const progressHtml=`<section class="progress" aria-label="Fortschritt"><h3 class="legend-title">Fortschritt</h3><div class="progress-text"><strong>${clearedPixels.toLocaleString("de-DE")}</strong> von ${totalPixels.toLocaleString("de-DE")} · ${percent} %</div><div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${totalPixels}" aria-valuenow="${clearedPixels}" aria-valuetext="${clearedPixels} von ${totalPixels} Pixeln abgeräumt"><div class="progress-fill" style="width:${(clearedPixels/totalPixels*100).toFixed(2)}%"></div></div></section>`;
-    legendEl.innerHTML = `<div class="legend-main"><div class="score-counter"><span>⭐ Punkte</span><strong>${totalScore.toLocaleString("de-DE")}</strong></div><div class="score-counter time-counter"><span>⏱ Zeit</span><strong id="timeValue">${formatTime(elapsedMs())}</strong></div><h3 class="legend-title">Pixel im Bild</h3><div class="legend-colors">` + ranked.map(({color,count}) =>
+    // Nicht mehr schaffbar: Bei negativer Wertung reichen die Punkte nicht für alle noch ausstehenden Pixel
+    // (im Bild + unterwegs). Die Wertung kann in späteren Runden nur schlechter werden.
+    const rate=pointsPerPixel();
+    const pendingPixels=remainingPixels+activeMovers.length;
+    const unwinnable=!ended && rate<0 && pendingPixels>0 && totalScore+pendingPixels*rate<=0;
+    const scoreTitle=unwinnable
+      ? ` title="Nicht mehr schaffbar: ${pendingPixels.toLocaleString("de-DE")} Pixel × ${rate} = ${(pendingPixels*rate).toLocaleString("de-DE")} Punkte"`
+      : "";
+    legendEl.innerHTML = `<div class="legend-main"><div class="score-counter${unwinnable ? " unwinnable" : ""}"${scoreTitle}><span>⭐ Punkte</span><strong>${totalScore.toLocaleString("de-DE")}</strong></div><div class="score-counter time-counter"><span>⏱ Zeit</span><strong id="timeValue">${formatTime(elapsedMs())}</strong></div><h3 class="legend-title">Pixel im Bild</h3><div class="legend-colors">` + ranked.map(({color,count}) =>
       `<span title="Noch ${count} Pixel im Bild"><span class="legend-name"><i class="swatch" style="background:${color.hex}"></i>${color.name}</span><strong class="pixel-count" data-color-count="${color.id}">${count}</strong></span>`
     ).join("") + `</div></div>` + progressHtml;
 
@@ -1989,6 +2018,7 @@ function pointsPerPixel() {
       const result = await response.json().catch(() => ({}));
       if (response.ok && result.authenticated === true) {
         setAdminAuthentication(true, "Administratorzugriff bestätigt. Die Verwaltungsfunktionen sind freigeschaltet.");
+        refreshOverallRanking();
         return true;
       }
 
@@ -2024,13 +2054,107 @@ function pointsPerPixel() {
     adminOverlayEl.hidden = true;
   }
 
+  // Übergreifende Wertung: Platz 1 = 10 Punkte … Platz 10 = 1 Punkt.
+  // Namen werden exakt (ohne Normalisierung) verglichen, damit jede Abweichung einzeln erscheint.
+  function computeOverallRanking() {
+    const players = new Map();
+    for (const imageId of Object.keys(sessionHighscores)) {
+      (sessionHighscores[imageId] || []).slice(0, 10).forEach((entry, index) => {
+        const points = 10 - index;
+        let player = players.get(entry.name);
+        if (!player) {
+          player = {name: entry.name, points: 0, placements: 0, positions: [], images: []};
+          players.set(entry.name, player);
+        }
+        player.points += points;
+        player.placements += 1;
+        player.positions.push(index + 1);
+        player.images.push(`${imageDisplayNames[imageId] || imageId}: ${index + 1}.`);
+      });
+    }
+    const list = [...players.values()];
+    for (const player of list) player.positions.sort((a, b) => a - b);
+    // Gleichstand: zuerst mehr bessere Platzierungen, danach alphabetisch.
+    list.sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points;
+      for (let i = 0; i < Math.max(a.positions.length, b.positions.length); i++) {
+        const pa = a.positions[i] ?? 99, pb = b.positions[i] ?? 99;
+        if (pa !== pb) return pa - pb;
+      }
+      return a.name.localeCompare(b.name, "de");
+    });
+    return list;
+  }
+
+  function renderOverallRanking() {
+    const container = document.getElementById("adminRanking");
+    container.replaceChildren();
+    if (!highscoresLoaded) {
+      const msg = document.createElement("div");
+      msg.className = "admin-ranking-empty";
+      msg.textContent = "Highscores konnten nicht geladen werden.";
+      container.appendChild(msg);
+      return;
+    }
+    const ranking = computeOverallRanking();
+    if (!ranking.length) {
+      const msg = document.createElement("div");
+      msg.className = "admin-ranking-empty";
+      msg.textContent = "Noch keine Einträge in den Bestenlisten.";
+      container.appendChild(msg);
+      return;
+    }
+    const table = document.createElement("table");
+    table.className = "admin-ranking";
+    const head = table.createTHead().insertRow();
+    [["Rang","num"],["Name",""],["Punkte","num"],["Plätze","num"],["Platzierungen",""]].forEach(([label, cls]) => {
+      const th = document.createElement("th");
+      th.textContent = label;
+      if (cls) th.className = cls;
+      head.appendChild(th);
+    });
+    const body = table.createTBody();
+    let rank = 0, lastPoints = null;
+    ranking.forEach((player, index) => {
+      if (player.points !== lastPoints) { rank = index + 1; lastPoints = player.points; }
+      const row = body.insertRow();
+      if (rank === 1) row.className = "top1";
+      const cells = [
+        [`${rank}.`, "num"],
+        [player.name, "player"],
+        [player.points.toLocaleString("de-DE"), "num"],
+        [String(player.placements), "num"],
+        [player.images.join(" · "), "detail"]
+      ];
+      for (const [text, cls] of cells) {
+        const cell = row.insertCell();
+        cell.textContent = text;
+        cell.className = cls;
+      }
+      // Unsichtbare Unterschiede (z. B. Leerzeichen) im Tooltip sichtbar machen.
+      row.cells[1].title = JSON.stringify(player.name);
+    });
+    container.appendChild(table);
+  }
+
+  async function refreshOverallRanking() {
+    const btn = document.getElementById("adminRankingRefresh");
+    btn.disabled = true;
+    try {
+      await loadHighscores(true);
+      renderOverallRanking();
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
   async function deleteHighscores(scope) {
     if (!adminAuthenticated || adminActionInProgress) return;
 
     const imageId = scope === "image" ? adminImageSelect.value : null;
     const imageName = imageId ? imageDisplayNames[imageId] : null;
     const confirmation = scope === "all"
-      ? "Wirklich ALLE Highscores aller 13 Bilder löschen? Vorher wird automatisch eine Sicherungskopie erstellt."
+      ? `Wirklich ALLE Highscores aller ${Object.keys(sessionHighscores).length} Bilder löschen? Vorher wird automatisch eine Sicherungskopie erstellt.`
       : `Wirklich alle Highscores für „${imageName}“ löschen? Vorher wird automatisch eine Sicherungskopie erstellt.`;
     const confirmed = await showConfirmDialog({
       title: scope === "all" ? "Alle Highscores löschen?" : "Highscores dieses Bildes löschen?",
@@ -2075,6 +2199,7 @@ function pointsPerPixel() {
 
       const refreshed = await loadHighscores(true);
       if (currentImage && refreshed) renderLegend();
+      renderOverallRanking();
 
       const description = scope === "all" ? "Alle Bestenlisten" : `Die Bestenliste „${imageName}“`;
       adminActionStatusEl.textContent = `${description} wurde geleert. ${Number(result.deleted) || 0} Einträge gelöscht. Sicherung: ${result.backup || "erstellt"}.`;
@@ -2763,6 +2888,8 @@ function pointsPerPixel() {
   document.addEventListener("keydown",event=>{ if (event.key === "Escape" && !adminOverlayEl.hidden) closeAdminPanel(); });
   adminDeleteImageBtn.addEventListener("click",()=>deleteHighscores("image"));
   adminDeleteAllBtn.addEventListener("click",()=>deleteHighscores("all"));
+  document.getElementById("adminRankingRefresh").addEventListener("click",refreshOverallRanking);
+  document.getElementById("adminImageCount").textContent = Object.keys(sessionHighscores).length;
   for (const [imageId, imageName] of Object.entries(imageDisplayNames)) {
     const option = document.createElement("option");
     option.value = imageId;
