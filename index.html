@@ -477,10 +477,9 @@
       <div class="admin-status" id="adminAuthStatus" role="status">Administratorzugriff wird geprüft …</div>
 
       <div class="admin-login-area" id="adminLoginArea" hidden>
-        <p>Öffne die Cloudflare-Anmeldung in einem neuen Tab. Melde dich dort mit deinem Administrator-Konto an. Kehre anschließend hierher zurück und klicke auf „Zugriff prüfen“.</p>
+        <p>Die Cloudflare-Anmeldung startet in diesem Fenster. Nach erfolgreicher Anmeldung kehrst du automatisch zu FaPi zurück und die Administrationsansicht öffnet sich.</p>
         <div class="admin-login-actions">
-          <a class="admin-login-link" id="adminLoginLink" href="/api/admin/check" target="_blank" rel="noopener noreferrer">Cloudflare-Anmeldung öffnen</a>
-          <button class="action secondary" id="adminCheckBtn" type="button">Zugriff prüfen</button>
+          <a class="admin-login-link" id="adminLoginLink" href="/api/admin/check?return=admin">Cloudflare-Anmeldung starten</a>
         </div>
       </div>
 
@@ -565,7 +564,6 @@
   const adminAuthStatusEl = document.getElementById("adminAuthStatus");
   const adminLoginAreaEl = document.getElementById("adminLoginArea");
   const adminControlsEl = document.getElementById("adminControls");
-  const adminCheckBtn = document.getElementById("adminCheckBtn");
   const adminImageSelect = document.getElementById("adminImageSelect");
   const adminDeleteImageBtn = document.getElementById("adminDeleteImage");
   const adminDeleteAllBtn = document.getElementById("adminDeleteAll");
@@ -1995,7 +1993,6 @@ function pointsPerPixel() {
   async function checkAdminAccess() {
     if (adminCheckInProgress) return false;
     adminCheckInProgress = true;
-    adminCheckBtn.disabled = true;
     adminAuthStatusEl.textContent = "Administratorzugriff wird geprüft …";
     adminActionStatusEl.hidden = true;
 
@@ -2036,7 +2033,6 @@ function pointsPerPixel() {
       return false;
     } finally {
       adminCheckInProgress = false;
-      adminCheckBtn.disabled = false;
     }
   }
 
@@ -2882,7 +2878,7 @@ function pointsPerPixel() {
   const setHelp = open => { helpOverlay.hidden = !open; if (open) document.getElementById("helpClose").focus(); };
   document.getElementById("helpBtn").addEventListener("click",()=>setHelp(true));
   document.getElementById("helpClose").addEventListener("click",()=>setHelp(false));
-  document.getElementById("adminBtnChooser").addEventListener("click",openAdminPanel);  adminCheckBtn.addEventListener("click",checkAdminAccess);
+  document.getElementById("adminBtnChooser").addEventListener("click",openAdminPanel);
   document.getElementById("adminClose").addEventListener("click",closeAdminPanel);
   adminOverlayEl.addEventListener("click",event=>{ if (event.target===adminOverlayEl) closeAdminPanel(); });
   document.addEventListener("keydown",event=>{ if (event.key === "Escape" && !adminOverlayEl.hidden) closeAdminPanel(); });
@@ -2945,6 +2941,20 @@ function pointsPerPixel() {
   drawPreview(document.getElementById("zingstPreview"),makeZingst);
   loadHighscores();
   showImageChooser();
+
+  // Nach erfolgreicher Cloudflare-Anmeldung leitet der Server auf
+  // /?openAdmin=1 zurück. Die Administration wird nach dem normalen
+  // Seitenaufbau geöffnet, damit sie nicht vom Startdialog überdeckt wird.
+  const adminReturnParams = new URLSearchParams(window.location.search);
+  if (adminReturnParams.get("openAdmin") === "1") {
+    adminReturnParams.delete("openAdmin");
+    const remainingQuery = adminReturnParams.toString();
+    const cleanUrl = window.location.pathname
+      + (remainingQuery ? `?${remainingQuery}` : "")
+      + window.location.hash;
+    window.history.replaceState(null, "", cleanUrl);
+    openAdminPanel();
+  }
 })();
 </script>
 </body>
