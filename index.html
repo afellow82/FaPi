@@ -357,6 +357,16 @@
         <span class="image-choice-title">⚽ FC Hansa Rostock</span>
         <small>Das Vereinswappen mit Fußball vor dem Ostseestadion.</small>
       </button>
+      <button class="image-choice" id="chooseTunnel" type="button">
+        <canvas id="tunnelPreview" width="150" height="150" aria-label="Vorschau abstrakter Regenbogen-Tunnel aus Quadratringen"></canvas>
+        <span class="image-choice-title">🌀 Regenbogen-Tunnel</span>
+        <small>Sehr schwer: Zwölf Farben in verschachtelten Ringen, die nur von außen nach innen abgetragen werden können.</small>
+      </button>
+      <button class="image-choice" id="chooseSanta" type="button">
+        <canvas id="santaPreview" width="150" height="150" aria-label="Vorschau Weihnachtsmann mit einem Sack voller Geschenke"></canvas>
+        <span class="image-choice-title">🎅 Weihnachtsmann</span>
+        <small>Der Weihnachtsmann in der Winternacht mit einem Sack voller Geschenke.</small>
+      </button>
     </div>
     <div class="chooser-admin">
       <button class="action secondary" id="adminBtnChooser" type="button">🔐 Administration</button>
@@ -372,7 +382,7 @@
       <button class="action" id="restart">Neues Spiel</button>
       <button class="action secondary" id="pauseBtn" type="button" aria-pressed="false">(P)ause</button>
       <button class="action secondary" id="helpBtn" type="button">Hilfe</button>
-      <div class="side-version">Version 1.12<br>(27.11.2026)</div>
+      <div class="side-version">Version 1.14<br>(27.11.2026)</div>
     </div>
 <div class="info-panel" id="infoPanel" hidden>
     <div class="rate-row">
@@ -550,6 +560,12 @@
   // Einzelne Bilder dürfen eigene Farbwerte/-namen für die zwölf Farb-IDs verwenden.
   const DEFAULT_PALETTE = Object.fromEntries(COLORS.map(c => [c.id,{name:c.name,hex:c.hex}]));
   const IMAGE_PALETTES = {
+    santa: {
+      red:{name:"Weihnachtsrot",hex:"#d3202f"}, lime:{name:"Dunkelrot",hex:"#8e1224"}, orange:{name:"Sackbraun",hex:"#a8713a"},
+      pink:{name:"Hautfarbe",hex:"#f4b58f"}, yellow:{name:"Gold",hex:"#f7c52b"}, green:{name:"Tannengrün",hex:"#1f8a4c"},
+      blue:{name:"Blau",hex:"#2f6fe0"}, turquoise:{name:"Türkis",hex:"#19b8a8"}, sky:{name:"Eisblau",hex:"#b5dcf2"},
+      violet:{name:"Nachtblau",hex:"#1b2760"}, white:{name:"Weiß",hex:"#ffffff"}, black:{name:"Schwarz",hex:"#111318"}
+    },
     hansa: {
       red:{name:"Hansa-Rot",hex:"#e33417"}, blue:{name:"Hansa-Blau",hex:"#0577c2"}, violet:{name:"Dunkelblau",hex:"#0b2a5b"},
       white:{name:"Weiß",hex:"#ffffff"}, black:{name:"Schwarz",hex:"#111318"}, sky:{name:"Himmelblau",hex:"#9fd3f0"},
@@ -615,7 +631,7 @@
   let timerEnd = null;     // Zeitpunkt, an dem das Spiel endet
   setInterval(() => updateTimerDisplay(), 100);
   // Lokaler Cache der dauerhaft auf dem Server gespeicherten Top-10-Listen.
-  const imageDisplayNames = {rainbow:"Regenbogen", christmas:"Weihnachtsbaum", flowers:"Blumenwiese", hearts:"Herzen", abstract:"Abstrakte Quadrate", vfb:"VfB Stuttgart", waterpolo:"Wasserball", coast:"Küste mit Leuchtturm", duesseldorf:"Skyline Düsseldorf", recorder:"Blockflöte", toronto:"CN Tower bei Nacht", parrot:"Papagei", mandala:"Mandala", neubrandenburg:"Stargarder Tor", zingst:"Seebrücke Zingst", hansa:"FC Hansa Rostock"};
+  const imageDisplayNames = {rainbow:"Regenbogen", christmas:"Weihnachtsbaum", flowers:"Blumenwiese", hearts:"Herzen", abstract:"Abstrakte Quadrate", vfb:"VfB Stuttgart", waterpolo:"Wasserball", coast:"Küste mit Leuchtturm", duesseldorf:"Skyline Düsseldorf", recorder:"Blockflöte", toronto:"CN Tower bei Nacht", parrot:"Papagei", mandala:"Mandala", neubrandenburg:"Stargarder Tor", zingst:"Seebrücke Zingst", hansa:"FC Hansa Rostock", tunnel:"Regenbogen-Tunnel (schwer)", santa:"Weihnachtsmann mit Geschenken"};
   // Je Bild eine eigene Bestenliste – wird automatisch aus imageDisplayNames erzeugt.
   const sessionHighscores = Object.fromEntries(Object.keys(imageDisplayNames).map(imageId => [imageId, []]));
   let highscoresLoaded = false;
@@ -1761,7 +1777,80 @@
     BALL.forEach((row,by) => [...row].forEach((ch,bx) => { if (ch!==" ") px(38+bx,37+by,BALL_MAP[ch]); }));
     return a;
   }
-  function makeSelectedImage() {
+  function makeTunnel() {
+    // 50×50 abstraktes Schwierigkeitsbild: 25 ineinander liegende, einen Pixel breite Quadratringe.
+    // Jede der zwölf Farben kommt in zwei (Rot dreimal) weit auseinanderliegenden Ringen vor.
+    // Ein Pixel ist nur lösbar, wenn er von außen erreichbar ist: Die Ringe lassen sich nur Schicht für Schicht
+    // abtragen, und innere Pixel einer Farbe blockieren ihren Ablageplatz, bis alle Ringe davor weg sind.
+    const ORDER = ["red","orange","yellow","lime","green","turquoise","sky","blue","violet","pink","white","black"];
+    const a = new Array(N*N);
+    for (let y=0; y<N; y++) for (let x=0; x<N; x++) {
+      const layer = Math.min(x,y,N-1-x,N-1-y);
+      a[y*N+x] = ORDER[layer % ORDER.length];
+    }
+    return a;
+  }  function makeSanta() {
+    // 50×50 Pixelmotiv: Weihnachtsmann mit einem Sack voller Geschenke in der Winternacht (Palette IMAGE_PALETTES.santa).
+    const a = Array.from({length:N*N}, () => "violet");
+    const px = (x,y,color) => { if (inside(x,y)) a[y*N+x]=color; };
+    const rect = (x1,y1,x2,y2,color) => { for (let y=y1; y<=y2; y++) for (let x=x1; x<=x2; x++) px(x,y,color); };
+    const ell = (cx,cy,rx,ry,color) => { for (let y=0; y<N; y++) for (let x=0; x<N; x++) if (((x-cx)/rx)**2+((y-cy)/ry)**2<=1) px(x,y,color); };
+    const hash = (x,y) => { let h=(x*73856093) ^ (y*19349663); h=Math.imul(h ^ (h>>>13),1274126177); h^=h>>>16; return (h>>>0)%100; };
+
+    // Nachthimmel mit Sternen, Mond, Schneeboden
+    for (let y=0; y<44; y++) for (let x=0; x<N; x++) if (hash(x,y) < 4) px(x,y,"white");
+    ell(6,8,4.4,4.4,"yellow"); ell(8.4,6.6,3.8,3.8,"violet"); px(4,4,"yellow");   // Mondsichel (obere Spitze mit dem Körper verbunden)
+    for (let y=44; y<N; y++) for (let x=0; x<N; x++) px(x,y, y===44 && hash(x,y)<45 ? "sky" : "white");
+    for (let y=46; y<N; y++) for (let x=0; x<N; x++) if (hash(x+9,y) < 7) px(x,y,"sky");
+    ell(17.5,46,12,1.3,"sky");
+
+    // Geschenke im Sack (werden unten vom Sack überdeckt)
+    rect(30,15,36,23,"green"); rect(33,15,33,23,"yellow"); rect(30,18,36,18,"yellow"); px(32,14,"yellow"); px(34,14,"yellow");
+    rect(42,12,49,23,"blue"); rect(45,12,46,23,"white"); rect(42,16,49,16,"white"); px(44,11,"white"); px(47,11,"white");
+    rect(35,5,42,19,"turquoise"); rect(38,5,39,19,"red"); rect(35,12,42,12,"red");
+    px(36,3,"red"); px(37,4,"red"); px(38,4,"red"); px(39,4,"red"); px(40,4,"red"); px(41,3,"red");
+
+    // Sack: Körper mit Kontur, zugeschnürter Hals mit Goldkordel, Falten
+    for (let y=0; y<N; y++) for (let x=0; x<N; x++) {
+      const d=((x-39.5)/9.5)**2+((y-33)/12)**2;
+      if (d<=1) px(x,y, ((x-39.5)/8.5)**2+((y-33)/11)**2<=1 ? "orange" : "black");
+    }
+    rect(35,20,44,22,"orange"); px(35,20,"black"); px(44,20,"black"); rect(35,21,35,22,"black"); rect(44,21,44,22,"black");
+    rect(34,23,45,23,"yellow"); px(34,24,"yellow"); px(45,24,"yellow");
+    for (let i=0; i<5; i++) { px(34+i,28+i,"black"); px(45-i,30+i,"black"); }
+    for (let i=0; i<4; i++) px(37+i,39+(i>>1),"black");
+    for (const [x,y] of [[36,33],[41,35],[39,30],[43,40],[35,38]]) px(x,y,"yellow");
+
+    // Stiefel und Beine
+    rect(11,40,14,41,"red"); rect(21,40,24,41,"red");
+    rect(9,42,15,45,"black"); rect(20,42,26,45,"black");
+    // Mantel mit dunkler Schattenseite, Pelzsaum, Gürtel
+    for (let y=24; y<=39; y++) {
+      const l=10-Math.floor((y-24)/7), r=25+Math.floor((y-24)/7);
+      rect(l,y,r,y,"red"); rect(r-2,y,r,y,"lime");
+    }
+    rect(17,24,18,32,"white"); rect(17,35,18,37,"white");
+    rect(8,38,27,39,"white");
+    rect(8,33,27,34,"black"); rect(16,33,19,34,"yellow"); rect(17,34,18,34,"black");
+    // Linker Arm (hängt herab) mit Fäustling
+    rect(5,25,9,32,"red"); rect(5,25,5,32,"lime"); rect(5,33,9,33,"white"); rect(5,34,9,37,"black");
+    // Rechter Arm greift den Sack
+    rect(25,25,31,30,"red"); rect(25,29,31,30,"lime"); rect(29,25,29,30,"white"); rect(30,26,33,31,"black");
+    // Kopf: Gesicht, Mütze mit Pelzrand und Bommel
+    ell(17.5,17.5,6.5,5.5,"pink");
+    const hat=[[13,10,25],[12,10,25],[11,11,24],[10,12,24],[9,13,24],[8,14,25],[7,16,27],[6,19,29],[5,23,30]];
+    for (const [y,x1,x2] of hat) { rect(x1,y,x2,y,"red"); rect(x2-1,y,x2,y,"lime"); }
+    ell(31,6,2.6,2.6,"white");
+    rect(9,13,26,15,"white");
+    ell(17.5,24.5,8,8,"white");
+    ell(17.5,20,6.2,1.7,"white");
+    for (let y=28; y<=32; y++) for (let x=10; x<=25; x++) if (a[y*N+x]==="white" && hash(x,y)<18) px(x,y,"sky");
+    rect(17,17,18,18,"red");
+    px(14,16,"black"); px(21,16,"black");
+    return a;
+  }  function makeSelectedImage() {
+    if (currentImage === "santa") return makeSanta();
+    if (currentImage === "tunnel") return makeTunnel();
     if (currentImage === "hansa") return makeHansa();
     if (currentImage === "zingst") return makeZingst();
     if (currentImage === "neubrandenburg") return makeNeubrandenburg();
@@ -1818,7 +1907,7 @@
     gameTitleEl.textContent="FaPi (Falling Pixels)";
     gameIntroEl.hidden=true;
     gameTitleEl.hidden=true;
-    const imageNames={rainbow:"Regenbogen",christmas:"Weihnachtsbaum mit Geschenken",flowers:"Blumenwiese",hearts:"Viele bunte Herzen",abstract:"Abstrakte Quadrate",vfb:"VfB Stuttgart",waterpolo:"Wasserballspieler beim Wurf",coast:"Küste mit Leuchtturm",duesseldorf:"Skyline von Düsseldorf",recorder:"Mädchen spielt Blockflöte",toronto:"CN Tower in Toronto bei Nacht mit Feuerwerk",parrot:"Bunter Papagei im Dschungel",mandala:"Buntes Mandala",neubrandenburg:"Stargarder Tor in Neubrandenburg",zingst:"Seebrücke Zingst mit Tauchgondel",hansa:"FC Hansa Rostock mit Ball vor dem Ostseestadion"};
+    const imageNames={rainbow:"Regenbogen",christmas:"Weihnachtsbaum mit Geschenken",flowers:"Blumenwiese",hearts:"Viele bunte Herzen",abstract:"Abstrakte Quadrate",vfb:"VfB Stuttgart",waterpolo:"Wasserballspieler beim Wurf",coast:"Küste mit Leuchtturm",duesseldorf:"Skyline von Düsseldorf",recorder:"Mädchen spielt Blockflöte",toronto:"CN Tower in Toronto bei Nacht mit Feuerwerk",parrot:"Bunter Papagei im Dschungel",mandala:"Buntes Mandala",neubrandenburg:"Stargarder Tor in Neubrandenburg",zingst:"Seebrücke Zingst mit Tauchgondel",hansa:"FC Hansa Rostock mit Ball vor dem Ostseestadion",tunnel:"Abstrakter Regenbogen-Tunnel aus ineinanderliegenden Quadratringen (schwer)",santa:"Weihnachtsmann mit einem Sack voller Geschenke"};
     boardEl.setAttribute("aria-label",`50 mal 50 Pixel großes Bild: ${imageNames[imageId]}`);
     imageChooser.hidden=true;
     gamePanel.hidden=false;
@@ -3032,6 +3121,8 @@ function pointsPerPixel() {
   document.getElementById("chooseNeubrandenburg").addEventListener("click",()=>startGame("neubrandenburg"));
   document.getElementById("chooseZingst").addEventListener("click",()=>startGame("zingst"));
   document.getElementById("chooseHansa").addEventListener("click",()=>startGame("hansa"));
+  document.getElementById("chooseTunnel").addEventListener("click",()=>startGame("tunnel"));
+  document.getElementById("chooseSanta").addEventListener("click",()=>startGame("santa"));
   nextRoundBtn.addEventListener("click",startNextRound);
   highscoreEntryFormEl.addEventListener("submit",submitTemporaryHighscore);
   drawPreview(document.getElementById("rainbowPreview"),makeRainbow);
@@ -3050,6 +3141,8 @@ function pointsPerPixel() {
   drawPreview(document.getElementById("neubrandenburgPreview"),makeNeubrandenburg);
   drawPreview(document.getElementById("zingstPreview"),makeZingst);
   drawPreview(document.getElementById("hansaPreview"),makeHansa,"hansa");
+  drawPreview(document.getElementById("tunnelPreview"),makeTunnel);
+  drawPreview(document.getElementById("santaPreview"),makeSanta,"santa");
   loadHighscores();
   showImageChooser();
 
