@@ -1,0 +1,389 @@
+{
+  "rainbow": [
+    {
+      "id": "dd6cda9f24d74cd6b0cdeddcd56f3057",
+      "name": "Jens",
+      "score": 7500,
+      "timeMs": 265011.0,
+      "timestamp": 1795107578075
+    },
+    {
+      "id": "b3870aef25b247fe856a7be8647d5f72",
+      "name": "Steffi",
+      "score": 7500,
+      "timeMs": 346150.0,
+      "timestamp": 1795126405129
+    },
+    {
+      "id": "6b2c0d4f30d5450092e0cbd5814ad656",
+      "name": "Steffi 🤓",
+      "score": 7500,
+      "timeMs": 2369415.0,
+      "timestamp": 1795124106428
+    },
+    {
+      "id": "0df8d21e6c494f958906c8d1a75251aa",
+      "name": "😎Tom😎",
+      "score": 6564,
+      "timeMs": 269298.0,
+      "timestamp": 1795371901419
+    },
+    {
+      "id": "9d389d6b7e4b4c639215c87a6662bedf",
+      "name": "Martina und Fiona",
+      "score": 3328,
+      "timeMs": 398164.0,
+      "timestamp": 1795113776256
+    }
+  ],
+  "christmas": [
+    {
+      "id": "145a9c1878fb40b0b71972bd2a375c59",
+      "name": "Jens",
+      "score": 7500,
+      "timeMs": 191952.0,
+      "timestamp": 1795285143350
+    },
+    {
+      "id": "6fef228fc43c40ffabbbb3f9aeb0ff12",
+      "name": "Steffi",
+      "score": 7112,
+      "timeMs": 375905.0,
+      "timestamp": 1795724024404
+    },
+    {
+      "id": "3f1ed3e09db64e5c956ef9cc68e9ef35",
+      "name": "Steffi",
+      "score": 3137,
+      "timeMs": 498723.0,
+      "timestamp": 1795125700578
+    },
+    {
+      "id": "b1678ead84184d39b82fa76f7d9cfc1b",
+      "name": "Jens",
+      "score": 3082,
+      "timeMs": 157080.0,
+      "timestamp": 1795284942586
+    }
+  ],
+  "flowers": [
+    {
+      "id": "0a476dff6e904008943e01f0ed8ebfd8",
+      "name": "Jens",
+      "score": 5122,
+      "timeMs": 251847.0,
+      "timestamp": 1795114531848
+    },
+    {
+      "id": "79a091f632074a44985a4e3aa9011d71",
+      "name": "Steffi",
+      "score": 3543,
+      "timeMs": 382252.0,
+      "timestamp": 1795482554956
+    }
+  ],
+  "hearts": [
+    {
+      "id": "09fdc601da5a47f2973ecf4734bc370b",
+      "name": "Steffi",
+      "score": 6648,
+      "timeMs": 360277.0,
+      "timestamp": 1795559774593
+    }
+  ],
+  "abstract": [
+    {
+      "id": "2c0ba357b3674a2f8bb5c372528ff213",
+      "name": "Tom ist krass!!!!",
+      "score": 7500,
+      "timeMs": 207077.0,
+      "timestamp": 1795359861175
+    },
+    {
+      "id": "f2aba91b4b56458996fca15e40c6b067",
+      "name": "Steffi",
+      "score": 7500,
+      "timeMs": 340530.0,
+      "timestamp": 1795729201198
+    },
+    {
+      "id": "205ecb86664243059c0c22639f6a98e7",
+      "name": "Jens",
+      "score": 6008,
+      "timeMs": 319077.0,
+      "timestamp": 1795383714336
+    },
+    {
+      "id": "5553f6ea34c646edb4da25281fc331f4",
+      "name": "Jens",
+      "score": 5568,
+      "timeMs": 321386.0,
+      "timestamp": 1795161946912
+    },
+    {
+      "id": "95ed4c34c0bc4bd6a72f4d772ba4e507",
+      "name": "Jens",
+      "score": 5085,
+      "timeMs": 295974.0,
+      "timestamp": 1795633090406
+    },
+    {
+      "id": "b9320dfd14424fdeae91ea6d562a17c6",
+      "name": "Steffi",
+      "score": 1506,
+      "timeMs": 520016.0,
+      "timestamp": 1795125178223
+    }
+  ],
+  "vfb": [
+    {
+      "id": "3681b62f20f04ed1a2f9fedd5533bcb6",
+      "name": "Steffi",
+      "score": 5669,
+      "timeMs": 424167.0,
+      "timestamp": 1795708381069
+    },
+    {
+      "id": "2cfcfa39c81e402c93eb1d9b51badbc9",
+      "name": "Jens",
+      "score": 4890,
+      "timeMs": 297354.0,
+      "timestamp": 1795115896454
+    }
+  ],
+  "waterpolo": [
+    {
+      "id": "184ad2477d92405b98462251bea99255",
+      "name": "Jens",
+      "score": 4261,
+      "timeMs": 258211.0,
+      "timestamp": 1795114842077
+    },
+    {
+      "id": "19e2610344314d80b1490b73c4568e22",
+      "name": "Steffi",
+      "score": 1414,
+      "timeMs": 356286.0,
+      "timestamp": 1795229584589
+    }
+  ],
+  "coast": [
+    {
+      "id": "e55fb973b27f4fd9801cfcea88145099",
+      "name": "Jens",
+      "score": 7500,
+      "timeMs": 233498.0,
+      "timestamp": 1795284749707
+    },
+    {
+      "id": "4b2f8cf02495497aa7d03c2f65cfd4a4",
+      "name": "Steffi",
+      "score": 7116,
+      "timeMs": 335201.0,
+      "timestamp": 1795132244226
+    }
+  ],
+  "duesseldorf": [
+    {
+      "id": "02a42fa474be448899089e683e79392b",
+      "name": "Steffi",
+      "score": 5711,
+      "timeMs": 317352.0,
+      "timestamp": 1795558904780
+    },
+    {
+      "id": "aed3cdb42e92478e82948e02d93e3c22",
+      "name": "Tom🤫",
+      "score": 4406,
+      "timeMs": 311608.0,
+      "timestamp": 1795371420331
+    }
+  ],
+  "recorder": [
+    {
+      "id": "aea95ad341da4ccca55513d57fdffceb",
+      "name": "Fiona cool",
+      "score": 7500,
+      "timeMs": 276409.0,
+      "timestamp": 1795359541326
+    },
+    {
+      "id": "33ea987e697c483aa8b95e460869ea1c",
+      "name": "Jens",
+      "score": 3678,
+      "timeMs": 250461.0,
+      "timestamp": 1795105707840
+    },
+    {
+      "id": "f0762ad74e2145ceb41961ae4f4deb51",
+      "name": "Steffi",
+      "score": 2322,
+      "timeMs": 454042.0,
+      "timestamp": 1795230193727
+    }
+  ],
+  "toronto": [
+    {
+      "id": "8cd8e2a441d1472e86d583b5ce117e68",
+      "name": "Jens",
+      "score": 7500,
+      "timeMs": 234060.0,
+      "timestamp": 1795285498006
+    },
+    {
+      "id": "40e1a5b8645f4071abe03540ea596712",
+      "name": "Steffi 🇨🇦",
+      "score": 7410,
+      "timeMs": 445038.0,
+      "timestamp": 1795139958457
+    },
+    {
+      "id": "a3680d03f2cb46539410e0d2affb8b0d",
+      "name": "Tom!",
+      "score": 6622,
+      "timeMs": 294102.0,
+      "timestamp": 1795114310756
+    },
+    {
+      "id": "2cdbfb49d7fa47dda516e31f941e3215",
+      "name": "Jens",
+      "score": 1404,
+      "timeMs": 308717.0,
+      "timestamp": 1795106328904
+    },
+    {
+      "id": "ca08d563768246f2b91fe33a9774a22c",
+      "name": "Jens",
+      "score": 410,
+      "timeMs": 350363.0,
+      "timestamp": 1795161527784
+    }
+  ],
+  "parrot": [
+    {
+      "id": "c1aff0c20a4c48c091bc37edd7be903f",
+      "name": "Jens",
+      "score": 7500,
+      "timeMs": 215090.0,
+      "timestamp": 1795452087744
+    },
+    {
+      "id": "5ce0060118ca43bca111d68ee066ab29",
+      "name": "Steffi 🦜",
+      "score": 6276,
+      "timeMs": 366473.0,
+      "timestamp": 1795395867700
+    },
+    {
+      "id": "b7b32eedd32c4b7d9a666b09829c0cc5",
+      "name": "Jens",
+      "score": 3711,
+      "timeMs": 212561.0,
+      "timestamp": 1795361682428
+    },
+    {
+      "id": "599f9a15201b46c7a306e0b61a5e8e10",
+      "name": "Jens",
+      "score": 1262,
+      "timeMs": 248054.0,
+      "timestamp": 1795106850364
+    }
+  ],
+  "mandala": [
+    {
+      "id": "39cd2259c0f14fc39edee52775d23b4e",
+      "name": "Steffüüü",
+      "score": 5729,
+      "timeMs": 329052.0,
+      "timestamp": 1795483147546
+    },
+    {
+      "id": "1e1ad265f4fe4d609f528ebda4b38a08",
+      "name": "Jens",
+      "score": 4694,
+      "timeMs": 246273.0,
+      "timestamp": 1795374056211
+    },
+    {
+      "id": "9187dd75d4674f8693ea2a557835b188",
+      "name": "Jens",
+      "score": 3757,
+      "timeMs": 226456.0,
+      "timestamp": 1795105435201
+    },
+    {
+      "id": "9a5ca898dbde4591bef9d34d1cd01cc5",
+      "name": "Tom",
+      "score": 3395,
+      "timeMs": 338143.0,
+      "timestamp": 1795372441025
+    },
+    {
+      "id": "ac1b12d1b04d425fb95782965546c077",
+      "name": "Jens",
+      "score": 1732,
+      "timeMs": 245583.0,
+      "timestamp": 1795372742015
+    },
+    {
+      "id": "d13916ce140b4b1cbcef212338155ac0",
+      "name": "Jens",
+      "score": 1048,
+      "timeMs": 209998.0,
+      "timestamp": 1795372981395
+    }
+  ],
+  "neubrandenburg": [
+    {
+      "id": "2122a16ae4af41f2b2a2551d88355dc0",
+      "name": "Fiona cool",
+      "score": 6817,
+      "timeMs": 393094.0,
+      "timestamp": 1795112822673
+    },
+    {
+      "id": "2ead28a06e6e4fc2aa386c58d04d4e1f",
+      "name": "Steffi 🫧",
+      "score": 5901,
+      "timeMs": 350111.0,
+      "timestamp": 1795395324244
+    },
+    {
+      "id": "e54ab43f84844933b5caa5e05960e08e",
+      "name": "Jens",
+      "score": 93,
+      "timeMs": 199001.0,
+      "timestamp": 1795107083304
+    }
+  ],
+  "zingst": [
+    {
+      "id": "8228309fec564178911d358e722bc516",
+      "name": "Jens",
+      "score": 6225,
+      "timeMs": 232355.0,
+      "timestamp": 1795361937365
+    },
+    {
+      "id": "b149201fd0b4442388b7420a278b80a6",
+      "name": "Tom😎",
+      "score": 5912,
+      "timeMs": 263338.0,
+      "timestamp": 1795332491499
+    },
+    {
+      "id": "d67396011746414091b59d08c8eff098",
+      "name": "Tom",
+      "score": 3026,
+      "timeMs": 279238.0,
+      "timestamp": 1795104736498
+    },
+    {
+      "id": "7d8471518af14dd3801d9453e497cf08",
+      "name": "Steffi 🙈",
+      "score": 141,
+      "timeMs": 506234.0,
+      "timestamp": 1795229181559
+    }
+  ]
+}

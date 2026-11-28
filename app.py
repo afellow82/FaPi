@@ -20,7 +20,7 @@ from threading import Lock
 from typing import Any, Iterator
 
 import jwt
-from flask import Flask, jsonify, make_response, request
+from flask import Flask, jsonify, make_response, redirect, request
 from jwt import PyJWKClient
 
 APP_DIR = Path(__file__).resolve().parent
@@ -36,6 +36,7 @@ IMAGE_IDS = (
     "rainbow", "christmas", "flowers", "hearts", "abstract", "vfb",
     "waterpolo", "coast", "duesseldorf", "recorder", "toronto", "parrot",
     "mandala", "neubrandenburg", "zingst",
+    "hansa", "tunnel", "santa",
 )
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -227,6 +228,13 @@ def create_app() -> Flask:
     @app.get("/api/admin/check")
     @admin_required
     def admin_check():
+        # Bei der Login-Rückkehr zur FaPi-Administrationsansicht wechseln.
+        if request.args.get("return") == "admin":
+            response = redirect("/?openAdmin=1", code=303)
+            response.headers["Cache-Control"] = "no-store"
+            return response
+
+        # Normale API-Prüfung liefert weiterhin JSON.
         response = make_response(jsonify(ok=True, authenticated=True))
         response.headers["Cache-Control"] = "no-store"
         return response
